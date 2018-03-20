@@ -33,7 +33,7 @@ def rbf_kernel(X, h=None):
 
     gradient = 2. / h * (first_part - second_part)
 
-    return kernel, gradient, h, distances
+    return kernel, gradient
 
 
 def calculate_log_prob_gradients(log_prob, x):
@@ -66,7 +66,7 @@ def calculate_update(x, log_prob, kernel_fun=rbf_kernel):
     # to be pre-multiplied by the step size before being used in an update.
 
     # Define the kernel
-    kernel, kernel_gradients, h, distances = kernel_fun(x)
+    kernel, kernel_gradients = kernel_fun(x)
 
     n_particles = tf.cast(tf.shape(log_prob)[0], tf.float32)
 
@@ -77,10 +77,4 @@ def calculate_update(x, log_prob, kernel_fun=rbf_kernel):
 
     combined = 1. / n_particles * (first_term + second_term)
 
-    return {'update': combined,
-            'log_prob_term': first_term,
-            'kernel_term': second_term,
-            'kernel': kernel,
-            'kernel_h': h,
-            'distances': distances,
-            'log_prob_grads': log_prob_gradients}
+    return combined
