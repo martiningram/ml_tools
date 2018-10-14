@@ -156,3 +156,13 @@ class DiagonalNormal(object):
             ax.plot(cur_pts, norm.pdf(cur_pts, cur_m, cur_std))
 
         return ax
+
+
+def covar_to_corr(covar_mat):
+    # Turns a covariance matrix into a correlation matrix
+
+    marg_var = np.diag(covar_mat)
+    marg_sd = np.sqrt(marg_var)
+    inv_marg = np.diag(1. / marg_sd)
+
+    return np.dot(np.dot(inv_marg, covar_mat), inv_marg)
