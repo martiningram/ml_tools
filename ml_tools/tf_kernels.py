@@ -30,3 +30,39 @@ def ard_rbf_kernel(x1, x2, lengthscales, alpha, jitter=1e-5):
     kern = tf.matrix_set_diag(kern, tf.diag_part(kern) + jitter)
 
     return kern
+
+
+def ard_rbf_kernel_batch(x1, x2, lengthscales, alpha, jitter=1e-5):
+
+    # x1 is N1 x D
+    # x2 is N2 x D (and N1 can be equal to N2)
+    # lengthscales is B x D [B is batch dim]
+    # alpha is B,
+
+    # Must have same number of dimensions
+    assert(x1.get_shape()[1] == x2.get_shape()[1])
+
+    # Also must match lengthscales
+    assert(lengthscales.get_shape()[1] == x1.get_shape()[1])
+
+    # Use broadcasting
+    # X1 will be (N1, 1, D)
+    x1_expanded = tf.expand_dims(x1, axis=1)
+    # X2 will be (1, N2, D)
+    x2_expanded = tf.expand_dims(x2, axis=0)
+
+    # These will be B x N1 x N2 x D
+    scaled_diffs = (tf.expand_dims(x1_expanded - x2_expanded, axis=0) /
+                    tf.expand_dims(tf.expand_dims(lengthscales, axis=1),
+                                   axis=1))**2
+
+    # Use broadcasting to do a dot product
+    exponent = tf.reduce_sum(scaled_diffs, axis=3)
+
+    kern = (tf.expand_dims(tf.expand_dims(alpha**2, axis=1), axis=1) *
+            tf.exp(-0.5 * exponent))
+
+    # Jitter this a little bit
+    kern = tf.matrix_set_diag(kern, tf.matrix_diag_part(kern) + jitter)
+
+    return kern
