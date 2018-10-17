@@ -35,7 +35,8 @@ def ard_rbf_kernel(x1, x2, lengthscales, alpha, jitter=1e-5):
     exponentiated = np.exp(-0.5 * exponent)
 
     kern = alpha**2 * exponentiated
-    kern[np.diag_indices_from(kern)] = np.diag(kern) + jitter
+    diag_indices = np.diag_indices(np.min(kern.shape[:2]))
+    kern[diag_indices] = kern[diag_indices] + jitter
 
     # Find gradients
     # Gradient with respect to alpha:

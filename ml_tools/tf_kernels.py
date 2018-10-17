@@ -62,12 +62,10 @@ def ard_rbf_kernel_batch(x1, x2, lengthscales, alpha, jitter=1e-5):
     cross_prods = -2 * tf.matmul(x1, x2, transpose_b=True)
 
     # This should produce a (B x N x N) distance mat
-    # Expanding x1s produces (B x 1 x N), which means it is subtracted from each
-    # row.
-    # Expanding x2s produces (B x N x 1), which means it is subtracted from each
-    # column.
-    dist = (cross_prods + tf.expand_dims(x1s, axis=1) +
-            tf.expand_dims(x2s, axis=2))
+    # TODO: This was the way I could get it to broadcast. But check whether it's
+    # right!!!!
+    dist = (cross_prods + tf.expand_dims(x1s, axis=2) +
+            tf.expand_dims(x2s, axis=1))
 
     # Multiply all of these
     kern = (tf.expand_dims(tf.expand_dims(alpha**2, axis=1), axis=1) *
