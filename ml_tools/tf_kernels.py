@@ -34,8 +34,6 @@ def ard_rbf_kernel(x1, x2, lengthscales, alpha, jitter=1e-5):
 
 def ard_rbf_kernel_batch(x1, x2, lengthscales, alpha, jitter=1e-5):
 
-    # TODO: This needs testing!
-
     # x1 is N1 x D
     # x2 is N2 x D (and N1 can be equal to N2)
     # lengthscales is B x D [B is batch dim]
@@ -62,8 +60,6 @@ def ard_rbf_kernel_batch(x1, x2, lengthscales, alpha, jitter=1e-5):
     cross_prods = -2 * tf.matmul(x1, x2, transpose_b=True)
 
     # This should produce a (B x N x N) distance mat
-    # TODO: This was the way I could get it to broadcast. But check whether it's
-    # right!!!!
     dist = (cross_prods + tf.expand_dims(x1s, axis=2) +
             tf.expand_dims(x2s, axis=1))
 
