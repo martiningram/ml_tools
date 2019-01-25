@@ -56,7 +56,7 @@ def ard_rbf_kernel_efficient(x1, x2, alpha, rho, jitter=1e-5):
     z2 = x2 / np.expand_dims(rho, axis=0)
 
     # Matrix part
-    cross_contrib = -2 * np.matmul(z1, z2.T)
+    cross_contrib = -2 * np.dot(z1, z2.T)
 
     # Other bits
     z1_sq = np.sum(z1**2, axis=1)
@@ -70,6 +70,9 @@ def ard_rbf_kernel_efficient(x1, x2, alpha, rho, jitter=1e-5):
 
     # Add the jitter
     diag_indices = np.diag_indices(np.min(kernel.shape[:2]))
-    kernel[diag_indices] = kernel[diag_indices] + jitter
+    to_add = np.zeros_like(kernel)
+    to_add[diag_indices] += jitter
+
+    kernel = kernel + to_add
 
     return kernel

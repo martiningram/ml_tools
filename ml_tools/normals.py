@@ -1,7 +1,8 @@
 import numpy as np
 import pandas as pd
 from scipy.stats import norm
-from scipy.linalg import inv
+import matplotlib.pyplot as plt
+from scipy.linalg import inv, cho_factor, cho_solve
 
 
 class MultivariateNormal(object):
@@ -166,3 +167,26 @@ def covar_to_corr(covar_mat):
     inv_marg = np.diag(1. / marg_sd)
 
     return np.dot(np.dot(inv_marg, covar_mat), inv_marg)
+
+
+def conditional_mean_and_cov(mu_x, mu_y, y, A, C, B):
+    """
+    Calculates the conditional mean and covariance of x given y.
+
+    Here, x and y are defined as in Quinonero & Candela's Sparse GP paper
+    (Appendix):
+
+    [x, y] ~ N([mu_x, mu_y], [[A, C], [C^T, B]])
+
+    and we calculate
+
+    x | y.
+    """
+
+    # Calculate the conditional mean
+    difference = y - mu_y
+    b_chol = cho_factor(B)
+    conditional_mean = mu_x + np.matmul(C, cho_solve(b_chol, difference))
+    conditional_cov = A - np.matmul(C, cho_solve(b_chol, C.T))
+
+    return {'mean': conditional_mean, 'cov': conditional_cov}
