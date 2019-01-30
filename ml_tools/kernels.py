@@ -50,7 +50,7 @@ def ard_rbf_kernel(x1, x2, lengthscales, alpha, jitter=1e-5):
     return kern, lengthscale_grads, alpha_grad
 
 
-def ard_rbf_kernel_efficient(x1, x2, alpha, rho, jitter=1e-5):
+def compute_weighted_square_distances(x1, x2, rho):
 
     z1 = x1 / np.expand_dims(rho, axis=0)
     z2 = x2 / np.expand_dims(rho, axis=0)
@@ -66,13 +66,49 @@ def ard_rbf_kernel_efficient(x1, x2, alpha, rho, jitter=1e-5):
     combined = (np.expand_dims(z1_sq, axis=1) + cross_contrib +
                 np.expand_dims(z2_sq, axis=0))
 
+    return combined
+
+
+def ard_rbf_kernel_efficient(x1, x2, alpha, rho, jitter=1e-5):
+
+    combined = compute_weighted_square_distances(x1, x2, rho)
     kernel = alpha**2 * np.exp(-0.5 * combined)
+    kernel = add_jitter(kernel, jitter)
+
+    return kernel
+
+
+def add_jitter(kernel, jitter=1e-5):
 
     # Add the jitter
     diag_indices = np.diag_indices(np.min(kernel.shape[:2]))
     to_add = np.zeros_like(kernel)
     to_add[diag_indices] += jitter
-
     kernel = kernel + to_add
+
+    return kernel
+
+
+def matern_kernel_32(x1, x2, alpha, rho, jitter=1e-5):
+
+    r_sq = compute_weighted_square_distances(x1, x2, rho)
+    r = np.sqrt(r_sq)
+
+    kernel = alpha ** 2 * (1 + np.sqrt(3) * r) * np.exp(-np.sqrt(3) * r)
+    kernel = add_jitter(kernel, jitter)
+
+    return kernel
+
+
+def brownian_kernel_1d(x1, x2, alpha, jitter=1e-5):
+
+    assert(x1.shape[1] == 1 and x2.shape[1] == 1)
+
+    variance = alpha ** 2
+
+    kernel = variance * np.where(np.sign(x1) == np.sign(x2.T),
+        np.fmin(np.abs(x1), np.abs(x2.T)), 0.)
+
+    kernel = add_jitter(kernel, jitter)
 
     return kernel
