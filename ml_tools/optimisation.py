@@ -1,16 +1,7 @@
 import numpy
-from sksparse.cholmod import cholesky
 
 
-def cholmod_solve(hess, jac):
-
-    cur_chol = cholesky(hess)
-    sol = cur_chol.solve_A(jac)
-
-    return sol
-
-
-def newton_optimise(start_f, fun, jac, hess, solve_fun=cholmod_solve):
+def newton_optimise(start_f, fun, jac, hess, solve_fun=numpy.linalg.solve):
 
     f = start_f
 
