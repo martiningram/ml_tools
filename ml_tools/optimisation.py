@@ -1,7 +1,8 @@
 import numpy
 
 
-def newton_optimise(start_f, fun, jac, hess, solve_fun=numpy.linalg.solve):
+def newton_optimise(start_f, fun, jac, hess, solve_fun=numpy.linalg.solve,
+                    tolerance=1e-5):
 
     f = start_f
 
@@ -10,7 +11,7 @@ def newton_optimise(start_f, fun, jac, hess, solve_fun=numpy.linalg.solve):
     # Write a Newton routine
     difference = 1.
 
-    while difference > 1e-5:
+    while difference > tolerance:
 
         cur_hess = hess(f)
         cur_jac = jac(f)

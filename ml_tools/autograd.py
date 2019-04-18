@@ -42,3 +42,10 @@ def multivariate_normal_logpdf(x, cov):
     total_prior = det_term - 0.5 * x @ np.linalg.inv(cov) @ x
 
     return total_prior
+
+
+def logdet_via_cholesky(mat):
+
+    chol = np.linalg.cholesky(mat)
+    logdet = 2 * np.sum(np.log(np.diag(chol)))
+    return logdet
