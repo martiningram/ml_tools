@@ -2,7 +2,7 @@ import tensorflow as tf
 
 
 def newton_optimize(start_f, fun, jac, hess, solve_fun=tf.linalg.solve,
-                    tolerance=1e-5):
+                    tolerance=1e-5, debug=False):
 
     # TODO: Consider adding a maxiter
     # FIXME: The float casts are egregious.
@@ -17,7 +17,13 @@ def newton_optimize(start_f, fun, jac, hess, solve_fun=tf.linalg.solve,
 
         new_f = f - sol
 
-        difference = tf.linalg.norm(f - new_f)
+        if debug:
+            # TODO: Not the neatest -- is there another way?
+            print_tensors = [tf.print(cur_hess), tf.print(f)]
+            with tf.control_dependencies(print_tensors):
+                difference = tf.linalg.norm(f - new_f)
+        else:
+            difference = tf.linalg.norm(f - new_f)
 
         return (new_f, difference)
 
