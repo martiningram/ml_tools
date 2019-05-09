@@ -13,6 +13,7 @@ def newton_optimize(start_f, fun, jac, hess, solve_fun=tf.linalg.solve,
 
         # Ensure jac is a (column) vector
         cur_jac = tf.reshape(jac(f), (-1, 1))
+
         sol = tf.squeeze(solve_fun(cur_hess, cur_jac))
 
         new_f = f - sol
@@ -20,6 +21,9 @@ def newton_optimize(start_f, fun, jac, hess, solve_fun=tf.linalg.solve,
         if debug:
             # TODO: Not the neatest -- is there another way?
             print_tensors = [tf.print(cur_hess), tf.print(f)]
+            hess_evals, _ = tf.linalg.eigh(cur_hess)
+            print_tensors += [tf.print(tf.reduce_max(hess_evals) /
+                                       tf.reduce_min(hess_evals))]
             with tf.control_dependencies(print_tensors):
                 difference = tf.linalg.norm(f - new_f)
         else:
