@@ -2,7 +2,7 @@ import tensorflow as tf
 
 
 def newton_optimize(start_f, fun, jac, hess, solve_fun=tf.linalg.solve,
-                    tolerance=1e-5, debug=False):
+                    tolerance=1e-5, debug=False, float_dtype=tf.float64):
 
     # TODO: Consider adding a maxiter
     # FIXME: The float casts are egregious.
@@ -31,7 +31,7 @@ def newton_optimize(start_f, fun, jac, hess, solve_fun=tf.linalg.solve,
 
         return (new_f, difference)
 
-    init_val = (start_f, tf.constant(1., dtype=tf.float64))
+    init_val = (start_f, tf.constant(1., dtype=float_dtype))
 
     result = tf.while_loop(lambda f, difference: difference > tolerance, body,
                            init_val)

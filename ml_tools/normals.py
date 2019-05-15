@@ -190,3 +190,37 @@ def conditional_mean_and_cov(mu_x, mu_y, y, A, C, B):
     conditional_cov = A - np.matmul(C, cho_solve(b_chol, C.T))
 
     return {'mean': conditional_mean, 'cov': conditional_cov}
+
+
+def conjugate_update_univariate(prior_mu, prior_var, lik_mu, lik_var):
+    """
+    Calculates the posterior distribution of a random variable theta for which
+
+    theta ~ N(prior_mu, prior_var)
+    y|theta ~ N(lik_mu, lik_var)
+
+    In this case, theta|y is Normal.
+
+    Args:
+        prior_mu: Mean of the normal prior on theta.
+        prior_var: Variance of the normal prior on theta.
+        lik_mu: Mean of the likelihood given theta.
+        lik_var: Variance of the likelihood given theta.
+
+    Returns:
+        Tuple[float,float]: Mean and variance of the posterior distribution of
+        theta.
+    """
+
+    prior_prec = 1. / prior_var
+    lik_prec = 1. / lik_var
+
+    new_prec = (prior_prec + lik_prec)
+
+    # TODO: Check this!
+    bracket_term = prior_mu * prior_prec + lik_mu * lik_prec
+
+    new_mean = (1. / new_prec) * bracket_term
+    new_var = 1. / new_prec
+
+    return new_mean, new_var
