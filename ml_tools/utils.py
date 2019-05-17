@@ -1,3 +1,5 @@
+import os
+import pickle
 from datetime import datetime
 
 
@@ -13,3 +15,11 @@ def create_path_with_variables(**kwargs):
     concatenated = f'{concatenated}, {datetime.now()}'
 
     return concatenated
+
+
+def load_pickle_safely(path_to_pickle):
+
+    assert os.path.isfile(path_to_pickle)
+
+    with open(path_to_pickle, 'rb') as f:
+        return pickle.load(f)
