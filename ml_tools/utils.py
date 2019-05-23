@@ -23,3 +23,9 @@ def load_pickle_safely(path_to_pickle):
 
     with open(path_to_pickle, 'rb') as f:
         return pickle.load(f)
+
+
+def save_pickle_safely(data_to_pickle, path_to_save_to):
+
+    with open(path_to_save_to, 'wb') as f:
+        pickle.dump(data_to_pickle, f)
