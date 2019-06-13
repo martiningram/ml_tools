@@ -224,3 +224,21 @@ def conjugate_update_univariate(prior_mu, prior_var, lik_mu, lik_var):
     new_var = 1. / new_prec
 
     return new_mean, new_var
+
+
+def linear_regression_online_update(m_km1, P_km1, H, m_obs, var_obs):
+    # m_km1: Prior mean
+    # P_km1: Prior cov
+    # H: Link from latent to observed
+    # m_obs: Mean of observation
+    # var_obs: Variance of observation
+
+    # We need to work with matrices here or the maths will be wrong
+    assert(all([len(x.shape) == 2 for x in [m_km1, H]]))
+
+    S_k = H @ P_km1 @ H.T + var_obs
+    K_k = P_km1 @ H.T * (1 / S_k)
+    m_k = m_km1 + K_k * (m_obs - H @ m_km1)
+    P_k = P_km1 - (K_k * S_k) @ K_k.T
+
+    return m_k, P_k

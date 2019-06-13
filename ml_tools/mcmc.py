@@ -46,8 +46,8 @@ def acceptance_step(log_r, theta, start_theta, key):
     return was_accepted, new_theta
 
 
-def run_hmc_steps(theta, eps, Lmax, key, log_posterior, log_posterior_grad_theta,
-                  diagonal_mass_matrix):
+def run_hmc_steps(theta, eps, Lmax, key, log_posterior,
+                  log_posterior_grad_theta, diagonal_mass_matrix):
     # Diagonal mass matrix: diagonal entries of M (a vector)
 
     inverse_diag_mass = 1. / diagonal_mass_matrix
