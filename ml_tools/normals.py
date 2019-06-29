@@ -234,11 +234,22 @@ def linear_regression_online_update(m_km1, P_km1, H, m_obs, var_obs):
     # var_obs: Variance of observation
 
     # We need to work with matrices here or the maths will be wrong
-    assert(all([len(x.shape) == 2 for x in [m_km1, H]]))
+    assert all([len(x.shape) == 2 for x in [m_km1, H]]), \
+        'm_km1 and H must have two dimensions each!'
+
+    v_k = m_obs - H @ m_km1
 
     S_k = H @ P_km1 @ H.T + var_obs
     K_k = P_km1 @ H.T * (1 / S_k)
-    m_k = m_km1 + K_k * (m_obs - H @ m_km1)
+    m_k = m_km1 + K_k * v_k
     P_k = P_km1 - (K_k * S_k) @ K_k.T
 
-    return m_k, P_k
+    # Calculate the log marginal likelihood here too
+    sign, logdet = np.linalg.slogdet(2 * np.pi * S_k)
+    logdet = sign * logdet
+
+    # Second part
+    quadratic_term = 0.5 * v_k.T @ np.linalg.solve(S_k, v_k)
+    energy_contrib = 0.5 * logdet + quadratic_term
+
+    return m_k, P_k, np.squeeze(energy_contrib)
