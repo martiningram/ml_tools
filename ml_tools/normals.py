@@ -232,6 +232,7 @@ def linear_regression_online_update(m_km1, P_km1, H, m_obs, var_obs):
     # H: Link from latent to observed
     # m_obs: Mean of observation
     # var_obs: Variance of observation
+    # Returns mean, cov, and _negative_ log marg lik.
 
     # We need to work with matrices here or the maths will be wrong
     assert all([len(x.shape) == 2 for x in [m_km1, H]]), \
@@ -253,3 +254,23 @@ def linear_regression_online_update(m_km1, P_km1, H, m_obs, var_obs):
     energy_contrib = 0.5 * logdet + quadratic_term
 
     return m_k, P_k, np.squeeze(energy_contrib)
+
+
+def weighted_sum(mean, cov, weights):
+    """
+    Computes mean and variance of a weighted sum of the mvn r.v.
+    Args:
+        mean (np.array): The mean of the MVN.
+        cov (np.array): The covariance of the MVN.
+        weights (np.array): A vector of weights to give the elements.
+    Returns:
+        Tuple[float, float]: The mean and variance of the weighted sum.
+    """
+
+    mean_summed_theta = np.dot(mean, weights)
+
+    outer_x = np.outer(weights, weights)
+    multiplied = cov * outer_x
+    weighted_sum = np.sum(multiplied)
+
+    return mean_summed_theta, weighted_sum

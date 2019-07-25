@@ -29,3 +29,9 @@ def save_pickle_safely(data_to_pickle, path_to_save_to):
 
     with open(path_to_save_to, 'wb') as f:
         pickle.dump(data_to_pickle, f)
+
+
+def get_cur_script_path(file_handle):
+    # Use by passing the __file__ variable
+    exec_dir = os.path.abspath(file_handle)
+    return exec_dir
