@@ -63,6 +63,15 @@ def bootstrap_metric(metric, y_t, y_p, n_samples=1000):
     return boot_metrics
 
 
+def richness_rmse(y_t, y_p):
+
+    # Each is expected to be N x S, where S is the number of outcomes.
+    expected_sum = y_p.sum(axis=1)
+    actual_sum = y_t.sum(axis=1)
+
+    return np.sqrt(np.mean((expected_sum - actual_sum)**2))
+
+
 def bootstrap_multi_class_eval(metric, y_t_df, y_p_df, n_samples=1000):
     # TODO: I could just rewrite this using the new "bootstrap_fun" function.
 

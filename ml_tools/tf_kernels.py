@@ -32,6 +32,16 @@ def ard_rbf_kernel(x1, x2, lengthscales, alpha, jitter=1e-5):
     return kern
 
 
+def bias_kernel(x1, x2, sd, jitter=1e-5):
+
+    output_rows = int(x1.get_shape()[0])
+    output_cols = int(x2.get_shape()[1])
+
+    to_multiply = tf.ones((output_rows, output_cols), dtype=x1.dtype)
+
+    return sd**2 * to_multiply
+
+
 def ard_rbf_kernel_batch(x1, x2, lengthscales, alpha, jitter=1e-5):
 
     # x1 is N1 x D
