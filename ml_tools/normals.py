@@ -3,6 +3,7 @@ import pandas as pd
 from scipy.stats import norm
 import matplotlib.pyplot as plt
 from scipy.linalg import inv, cho_factor, cho_solve
+from scipy.special import expit
 
 
 class MultivariateNormal(object):
@@ -274,3 +275,14 @@ def weighted_sum(mean, cov, weights):
     weighted_sum = np.sum(multiplied)
 
     return mean_summed_theta, weighted_sum
+
+
+def logistic_normal_integral_approx(mu, var):
+    """
+    Approximates the logistic normal integral, E[logit^{-1}(X)], where
+    X ~ N(mu, var).
+    """
+
+    gamma = np.sqrt(1 + (np.pi * (var / 8)))
+
+    return expit(mu / gamma)
