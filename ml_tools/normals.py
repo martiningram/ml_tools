@@ -286,3 +286,25 @@ def logistic_normal_integral_approx(mu, var):
     gamma = np.sqrt(1 + (np.pi * (var / 8)))
 
     return expit(mu / gamma)
+
+
+def corr_to_covar(variances, corr_mat):
+
+    diag_cov = np.diag(variances)
+
+    return np.sqrt(diag_cov) @ corr_mat @ np.sqrt(diag_cov)
+
+
+def mvn_kl(mu_0, sigma_0, mu_1, sigma_1):
+
+    logdet_sigma_1 = np.linalg.slogdet(sigma_1)[1]
+    logdet_sigma_0 = np.linalg.slogdet(sigma_0)[1]
+    term_1 = 0.5 * (logdet_sigma_1 - logdet_sigma_0)
+
+    # I wonder if there's a more efficient way?
+    mu_outer = np.outer(mu_0 - mu_1, mu_0 - mu_1)
+    inside_term = mu_outer + sigma_0 - sigma_1
+    solved = np.linalg.solve(sigma_1, inside_term)
+    term_2 = 0.5 * np.trace(solved)
+
+    return term_1 + term_2

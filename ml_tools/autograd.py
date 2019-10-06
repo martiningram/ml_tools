@@ -3,6 +3,7 @@ import autograd.numpy as np
 from typing import Callable, Tuple
 from autograd import hessian, jacobian
 from scipy.optimize import minimize
+from autograd.scipy.special import expit
 
 
 def forward_grad_vector(fun, arg_no, n_derivs, *args):
@@ -117,3 +118,29 @@ def linear_regression_online_update(m_km1, P_km1, H, m_obs, var_obs):
     energy_contrib = 0.5 * logdet + quadratic_term
 
     return m_k, P_k, np.squeeze(energy_contrib)
+
+
+def logistic_normal_integral_approx(mu, var):
+    """
+    Approximates the logistic normal integral, E[logit^{-1}(X)], where
+    X ~ N(mu, var).
+    """
+
+    gamma = np.sqrt(1 + (np.pi * (var / 8)))
+
+    return expit(mu / gamma)
+
+
+def mvn_kl(mu_0, sigma_0, mu_1, sigma_1):
+
+    logdet_sigma_1 = np.linalg.slogdet(sigma_1)[1]
+    logdet_sigma_0 = np.linalg.slogdet(sigma_0)[1]
+    term_1 = 0.5 * (logdet_sigma_1 - logdet_sigma_0)
+
+    # I wonder if there's a more efficient way?
+    mu_outer = np.outer(mu_0 - mu_1, mu_0 - mu_1)
+    inside_term = mu_outer + sigma_0 - sigma_1
+    solved = np.linalg.solve(sigma_1, inside_term)
+    term_2 = 0.5 * np.trace(solved)
+
+    return term_1 + term_2

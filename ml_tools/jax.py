@@ -2,6 +2,7 @@ import jax.numpy as np
 from jax import lax, hessian, jacobian
 from typing import Callable, Tuple
 from scipy.optimize import minimize
+from jax.ops.scatter import index_update
 
 
 # def hessian(fun, argnum=0):
@@ -90,3 +91,12 @@ def fit_laplace_approximation(neg_log_posterior_fun: Callable[[np.ndarray],
     mean_approx = result.x
 
     return mean_approx, covariance_approx, result.success
+
+
+def lo_tri_from_elements(elements, n):
+
+    L = np.zeros((n, n))
+    indices = np.tril_indices(L.shape[0])
+    L = index_update(L, indices, elements)
+
+    return L

@@ -248,7 +248,7 @@ def bootstrap_fun(fun, *args, is_df=True, n_bootstraps=1000,
 
 def sample_mean_distribution_clt(x):
     # Given a vector of observations x, computes the sample mean and its
-    # variance using the CLT.
+    # standard deviation using the CLT.
 
     mean = np.mean(x)
     sd = np.std(x)

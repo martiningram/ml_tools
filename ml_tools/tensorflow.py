@@ -1,3 +1,4 @@
+import numpy as np
 import tensorflow as tf
 
 
@@ -37,3 +38,13 @@ def newton_optimize(start_f, fun, jac, hess, solve_fun=tf.linalg.solve,
                            init_val)
 
     return result[0]
+
+
+def lo_tri_from_elements(elements, n):
+    # Elements are the elements to include
+    # n is the size of the lower triangular matrix
+
+    indices = np.array(np.tril_indices(n)).T
+    L = tf.scatter_nd(indices, elements, (n, n))
+
+    return L
