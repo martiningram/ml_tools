@@ -48,3 +48,24 @@ def lo_tri_from_elements(elements, n):
     L = tf.scatter_nd(indices, elements, (n, n))
 
     return L
+
+
+def rep_vector(vector, n_rep):
+
+    # Replicates vector and stacks along first axis.
+    # For example, inputs vector = [1, 2, 3] and n_rep = 2
+    # should return [[1, 2, 3], [1, 2, 3]], a matrix of size (2, 3).
+
+    assert len(vector.shape) == 1, 'rep_vector only defined for 1D inputs!'
+
+    return tf.reshape(tf.tile(vector, [n_rep]), (n_rep, -1))
+
+
+def rep_matrix(matrix, n_rep):
+
+    # Replicates matrix and stacks along first axis.
+
+    assert len(matrix.shape) == 2, 'rep_matrix only defined for 2D inputs!'
+
+    return tf.reshape(tf.tile(matrix, [n_rep, 1]),
+                      (n_rep, matrix.shape[0], -1))
