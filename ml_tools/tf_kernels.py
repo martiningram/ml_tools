@@ -4,6 +4,7 @@ import tensorflow as tf
 
 EPS = 1e-12
 
+
 def compute_weighted_square_distances(x1, x2, lengthscales):
 
     assert x1.shape[1] == x2.shape[1]
@@ -39,6 +40,17 @@ def matern_kernel_32(x1, x2, alpha, lengthscales, jitter=1e-5):
     r = tf.sqrt(r_sq + EPS)
 
     kernel = alpha ** 2 * (1 + np.sqrt(3.) * r) * tf.exp(-np.sqrt(3.) * r)
+    kernel = add_jitter(kernel, jitter)
+
+    return kernel
+
+
+def matern_kernel_12(x1, x2, alpha, rho, jitter=1e-5):
+
+    r_sq = compute_weighted_square_distances(x1, x2, rho)
+    r = np.sqrt(r_sq)
+
+    kernel = alpha**2 * np.exp(-r)
     kernel = add_jitter(kernel, jitter)
 
     return kernel
