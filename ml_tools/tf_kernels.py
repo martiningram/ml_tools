@@ -1,12 +1,12 @@
 import tensorflow as tf
 
 
-def compute_weighted_square_distances(x1, x2, rho):
+def compute_weighted_square_distances(x1, x2, lengthscales):
 
     assert x1.shape[1] == x2.shape[1]
 
-    z1 = x1 / tf.expand_dims(rho, axis=0)
-    z2 = x2 / tf.expand_dims(rho, axis=0)
+    z1 = x1 / tf.expand_dims(lengthscales, axis=0)
+    z2 = x2 / tf.expand_dims(lengthscales, axis=0)
 
     cross_contrib = -2 * tf.matmul(z1, tf.transpose(z2))
 
@@ -16,13 +16,26 @@ def compute_weighted_square_distances(x1, x2, rho):
     combined = (tf.expand_dims(z1_sq, axis=1) + cross_contrib +
                 tf.expand_dims(z2_sq, axis=0))
 
-    return combined
+    # This seems required as some elements can become smaller than zero.
+    # Would be nice to fix this another way & make sure all OK.
+    return tf.maximum(combined, 0.)
 
 
 def ard_rbf_kernel(x1, x2, lengthscales, alpha, jitter=1e-5):
 
     combined = compute_weighted_square_distances(x1, x2, lengthscales)
     kernel = alpha**2 * tf.exp(-0.5 * combined)
+    kernel = add_jitter(kernel, jitter)
+
+    return kernel
+
+
+def matern_kernel_32(x1, x2, alpha, lengthscales, jitter=1e-5):
+
+    r_sq = compute_weighted_square_distances(x1, x2, lengthscales)
+    r = tf.sqrt(r_sq)
+
+    kernel = alpha ** 2 * (1 + tf.sqrt(3.) * r) * tf.exp(-tf.sqrt(3.) * r)
     kernel = add_jitter(kernel, jitter)
 
     return kernel
