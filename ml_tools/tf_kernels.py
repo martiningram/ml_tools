@@ -25,40 +25,86 @@ def compute_weighted_square_distances(x1, x2, lengthscales):
     return tf.maximum(combined, 0.)
 
 
-def ard_rbf_kernel(x1, x2, lengthscales, alpha, jitter=1e-5):
+def compute_diag_weighted_square_distance(x1, x2, lengthscales):
 
-    combined = compute_weighted_square_distances(x1, x2, lengthscales)
-    kernel = alpha**2 * tf.exp(-0.5 * combined)
-    kernel = add_jitter(kernel, jitter)
+    z1 = x1 / tf.expand_dims(lengthscales, axis=0)
+    z2 = x2 / tf.expand_dims(lengthscales, axis=0)
+
+    max_len = min(int(z1.shape[0]), int(z2.shape[0]))
+
+    z1 = z1[:max_len]
+    z2 = z2[:max_len]
+
+    cross_terms = -2 * tf.reduce_sum(z1 * z2, axis=1)
+    norms = tf.reduce_sum(z1**2, axis=1) + tf.reduce_sum(z2**2, axis=1)
+
+    return tf.maximum(norms + cross_terms, 0.)
+
+
+def ard_rbf_kernel(x1, x2, lengthscales, alpha, jitter=1e-5, diag_only=False):
+
+    if diag_only:
+
+        r_sq = compute_diag_weighted_square_distance(x1, x2, lengthscales)
+
+    else:
+
+        r_sq = compute_weighted_square_distances(x1, x2, lengthscales)
+
+    kernel = alpha**2 * tf.exp(-0.5 * r_sq)
+
+    kernel = add_jitter(kernel, jitter, diag_only)
 
     return kernel
 
 
-def matern_kernel_32(x1, x2, alpha, lengthscales, jitter=1e-5):
+def matern_kernel_32(x1, x2, alpha, lengthscales, jitter=1e-5,
+                     diag_only=False):
 
-    r_sq = compute_weighted_square_distances(x1, x2, lengthscales)
+    if diag_only:
+
+        r_sq = compute_diag_weighted_square_distance(x1, x2, lengthscales)
+
+    else:
+
+        r_sq = compute_weighted_square_distances(x1, x2, lengthscales)
+
     r = tf.sqrt(r_sq + EPS)
 
     kernel = alpha ** 2 * (1 + np.sqrt(3.) * r) * tf.exp(-np.sqrt(3.) * r)
-    kernel = add_jitter(kernel, jitter)
+    kernel = add_jitter(kernel, jitter, diag_only)
 
     return kernel
 
 
-def matern_kernel_12(x1, x2, alpha, lengthscales, jitter=1e-5):
+def matern_kernel_12(x1, x2, alpha, lengthscales, jitter=1e-5,
+                     diag_only=False):
 
-    r_sq = compute_weighted_square_distances(x1, x2, lengthscales)
+    if diag_only:
+
+        r_sq = compute_diag_weighted_square_distance(x1, x2, lengthscales)
+
+    else:
+
+        r_sq = compute_weighted_square_distances(x1, x2, lengthscales)
+
     r = np.sqrt(r_sq + EPS)
 
     kernel = alpha**2 * np.exp(-r)
-    kernel = add_jitter(kernel, jitter)
+    kernel = add_jitter(kernel, jitter, diag_only)
 
     return kernel
 
 
-def add_jitter(kern, jitter=1e-5):
+def add_jitter(kern, jitter=1e-5, diag_only=False):
 
-    kern = tf.matrix_set_diag(kern, tf.matrix_diag_part(kern) + jitter)
+    if diag_only:
+
+        kern = kern + jitter
+
+    else:
+
+        kern = tf.linalg.set_diag(kern, tf.linalg.diag_part(kern) + jitter)
 
     return kern
 
@@ -95,6 +141,8 @@ def ard_rbf_kernel_old(x1, x2, lengthscales, alpha, jitter=1e-5):
 
 
 def bias_kernel(x1, x2, sd, jitter=1e-5):
+
+    # TODO: Add diag_only option
 
     output_rows = int(x1.get_shape()[0])
     output_cols = int(x2.get_shape()[0])
