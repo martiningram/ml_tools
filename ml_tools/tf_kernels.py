@@ -45,10 +45,10 @@ def matern_kernel_32(x1, x2, alpha, lengthscales, jitter=1e-5):
     return kernel
 
 
-def matern_kernel_12(x1, x2, alpha, rho, jitter=1e-5):
+def matern_kernel_12(x1, x2, alpha, lengthscales, jitter=1e-5):
 
-    r_sq = compute_weighted_square_distances(x1, x2, rho)
-    r = np.sqrt(r_sq)
+    r_sq = compute_weighted_square_distances(x1, x2, lengthscales)
+    r = np.sqrt(r_sq + EPS)
 
     kernel = alpha**2 * np.exp(-r)
     kernel = add_jitter(kernel, jitter)
