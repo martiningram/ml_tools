@@ -1,7 +1,41 @@
 import tensorflow as tf
 
 
+def compute_weighted_square_distances(x1, x2, rho):
+
+    assert x1.shape[1] == x2.shape[1]
+
+    z1 = x1 / tf.expand_dims(rho, axis=0)
+    z2 = x2 / tf.expand_dims(rho, axis=0)
+
+    cross_contrib = -2 * tf.matmul(z1, tf.transpose(z2))
+
+    z1_sq = tf.reduce_sum(z1**2, axis=1)
+    z2_sq = tf.reduce_sum(z2**2, axis=1)
+
+    combined = (tf.expand_dims(z1_sq, axis=1) + cross_contrib +
+                tf.expand_dims(z2_sq, axis=0))
+
+    return combined
+
+
 def ard_rbf_kernel(x1, x2, lengthscales, alpha, jitter=1e-5):
+
+    combined = compute_weighted_square_distances(x1, x2, lengthscales)
+    kernel = alpha**2 * tf.exp(-0.5 * combined)
+    kernel = add_jitter(kernel, jitter)
+
+    return kernel
+
+
+def add_jitter(kern, jitter=1e-5):
+
+    kern = tf.matrix_set_diag(kern, tf.matrix_diag_part(kern) + jitter)
+
+    return kern
+
+
+def ard_rbf_kernel_old(x1, x2, lengthscales, alpha, jitter=1e-5):
 
     # x1 is N1 x D
     # x2 is N2 x D (and N1 can be equal to N2)
@@ -40,7 +74,7 @@ def bias_kernel(x1, x2, sd, jitter=1e-5):
     to_multiply = tf.ones((output_rows, output_cols), dtype=x1.dtype)
 
     kern = sd**2 * to_multiply
-    kern = tf.matrix_set_diag(kern, tf.matrix_diag_part(kern) + jitter)
+    kern = tf.linalg.set_diag(kern, tf.linalg.diag_part(kern) + jitter)
 
     return kern
 
