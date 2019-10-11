@@ -69,3 +69,11 @@ def rep_matrix(matrix, n_rep):
 
     return tf.reshape(tf.tile(matrix, [n_rep, 1]),
                       (n_rep, matrix.shape[0], -1))
+
+
+def solve_via_cholesky(k_chol, y):
+
+    s = tf.linalg.triangular_solve(k_chol, y, lower=True)
+    b = tf.linalg.triangular_solve(tf.transpose(k_chol), s, lower=False)
+
+    return b
