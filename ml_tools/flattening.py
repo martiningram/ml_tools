@@ -21,7 +21,7 @@ def flatten_and_summarise(**input_arrays):
     return flattened, summaries
 
 
-def reconstruct(flat_array, summaries):
+def reconstruct(flat_array, summaries, reshape_fun=np.reshape):
 
     # Base case
     if len(summaries) == 0:
@@ -29,10 +29,13 @@ def reconstruct(flat_array, summaries):
         return {}
 
     cur_name, cur_summary = list(summaries.items())[0]
-    cur_elements = np.prod(cur_summary.shape)
+
+    # Cast to int is there to have this definitely work with TF
+    cur_elements = int(np.prod(cur_summary.shape))
 
     cur_result = {
-        cur_name: flat_array[:cur_elements].reshape(cur_summary.shape)}
+        cur_name: reshape_fun(flat_array[:cur_elements], cur_summary.shape)
+    }
 
     remaining_summaries = OrderedDict({x: y for x, y in summaries.items()
                                        if x != cur_name})
