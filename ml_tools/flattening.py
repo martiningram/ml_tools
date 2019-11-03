@@ -1,4 +1,6 @@
 import numpy as np
+import tensorflow as tf
+from functools import partial
 from collections import namedtuple, OrderedDict
 
 
@@ -21,7 +23,7 @@ def flatten_and_summarise(**input_arrays):
     return flattened, summaries
 
 
-def reconstruct(flat_array, summaries, reshape_fun=np.reshape):
+def reconstruct(flat_array, summaries, reshape_fun):
 
     # Base case
     if len(summaries) == 0:
@@ -41,4 +43,10 @@ def reconstruct(flat_array, summaries, reshape_fun=np.reshape):
                                        if x != cur_name})
 
     return {**cur_result, **reconstruct(flat_array[cur_elements:],
-                                        remaining_summaries)}
+                                        remaining_summaries,
+                                        reshape_fun=reshape_fun)}
+
+
+# Convenience functions
+reconstruct_tf = partial(reconstruct, reshape_fun=tf.reshape)
+reconstruct_np = partial(reconstruct, reshape_fun=np.reshape)
