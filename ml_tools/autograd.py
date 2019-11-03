@@ -144,3 +144,37 @@ def mvn_kl(mu_0, sigma_0, mu_1, sigma_1):
     term_2 = 0.5 * np.trace(solved)
 
     return term_1 + term_2
+
+
+def weighted_sum(mean, cov, weights):
+    """
+    Computes mean and variance of a weighted sum of the mvn r.v.
+    Args:
+        mean (np.array): The mean of the MVN.
+        cov (np.array): The covariance of the MVN.
+        weights (np.array): A vector of weights to give the elements.
+    Returns:
+        Tuple[float, float]: The mean and variance of the weighted sum.
+    """
+
+    mean_summed_theta = np.dot(mean, weights)
+
+    outer_x = np.outer(weights, weights)
+    multiplied = cov * outer_x
+    weighted_sum = np.sum(multiplied)
+
+    return mean_summed_theta, weighted_sum
+
+
+def normal_kl_1d(mu1, var1, mu2, var2):
+
+    sd1 = np.sqrt(var1)
+    sd2 = np.sqrt(var2)
+
+    log_term = np.log(sd2) - np.log(sd1)
+
+    main_term = (var1 + (mu1 - mu2)**2) / (2 * var2)
+
+    const_term = -0.5
+
+    return log_term + main_term + const_term

@@ -77,3 +77,34 @@ def solve_via_cholesky(k_chol, y):
     b = tf.linalg.triangular_solve(tf.transpose(k_chol), s, lower=False)
 
     return b
+
+
+def weighted_sum(mean, cov, weights):
+    """
+    Computes mean and variance of a weighted sum of the mvn r.v.
+    Args:
+        mean (np.array): The mean of the MVN.
+        cov (np.array): The covariance of the MVN.
+        weights (np.array): A vector of weights to give the elements.
+    Returns:
+        Tuple[float, float]: The mean and variance of the weighted sum.
+    """
+
+    mean_summed_theta = tf.einsum('i,i->', mean,  weights)
+
+    outer_x = tf.einsum('i,j->ij', weights, weights)
+    multiplied = cov * outer_x
+    weighted_sum = tf.reduce_sum(multiplied)
+
+    return mean_summed_theta, weighted_sum
+
+
+def logistic_normal_integral_approx(mu, var):
+    """
+    Approximates the logistic normal integral, E[logit^{-1}(X)], where
+    X ~ N(mu, var).
+    """
+
+    gamma = tf.sqrt(1 + (np.pi * (var / 8)))
+
+    return tf.sigmoid(mu / gamma)
