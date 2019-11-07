@@ -1,6 +1,6 @@
 import autograd.numpy as np
 import scipy.sparse.linalg as spl
-from scipy.linalg import cho_solve, cho_factor
+from scipy.linalg import cho_solve, cho_factor, solve_triangular
 
 
 def cholesky_inverse(matrix):
@@ -37,3 +37,21 @@ def num_triangular_elts(mat_size, include_diagonal=True):
         return int(mat_size * (mat_size + 1) / 2)
     else:
         return int(mat_size * (mat_size - 1) / 2)
+
+
+def solve_via_cholesky(k_chol, y):
+    """Solves a positive definite linear system via a Cholesky decomposition.
+
+    Args:
+        k_chol: The Cholesky factor of the matrix to solve. A lower triangular
+            matrix, perhaps more commonly known as L.
+        y: The vector to solve.
+    """
+
+    # Solve Ls = y
+    s = solve_triangular(k_chol, y, lower=True)
+
+    # Solve Lt b = s
+    b = solve_triangular(k_chol.T, s)
+
+    return b
