@@ -26,11 +26,6 @@ def pos_def_mat_from_vector(vec, target_size):
     return np.matmul(L, L.T)
 
 
-def pos_def_mat_from_mat(mat):
-
-    return np.matmul(mat, mat.T) + np.eye(mat.shape[0]) * 1e-6
-
-
 def num_triangular_elts(mat_size, include_diagonal=True):
 
     if include_diagonal:

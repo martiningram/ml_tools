@@ -132,3 +132,13 @@ def logistic_normal_integral_approx(mu, var):
     gamma = np.sqrt(1 + (np.pi * (var / 8)))
 
     return expit(mu / gamma)
+
+
+def pos_def_mat_from_tri_elts(elts, mat_size, jitter=1e-6):
+
+    cov_mat = lo_tri_from_elements(elts, mat_size)
+    cov_mat = cov_mat @ cov_mat.T
+
+    cov_mat = cov_mat + np.eye(mat_size) * jitter
+
+    return cov_mat

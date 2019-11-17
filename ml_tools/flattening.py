@@ -25,6 +25,21 @@ def flatten_and_summarise(**input_arrays):
     return flattened, summaries
 
 
+def flatten_and_summarise_tf(**input_arrays):
+    # Better way than this duplication?
+
+    input_arrays = OrderedDict(input_arrays)
+
+    summaries = OrderedDict(
+        {x: extract_info(y) for x, y in input_arrays.items()}
+    )
+
+    flattened = tf.concat([tf.reshape(y, (-1,)) for y in
+                           input_arrays.values()], axis=0)
+
+    return flattened, summaries
+
+
 def reconstruct(flat_array, summaries, reshape_fun):
 
     # Base case
