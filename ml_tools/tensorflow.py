@@ -108,3 +108,11 @@ def logistic_normal_integral_approx(mu, var):
     gamma = tf.sqrt(1 + (np.pi * (var / 8)))
 
     return tf.sigmoid(mu / gamma)
+
+
+# From
+# https://stackoverflow.com/questions/40896157/scipy-sparse-csr-matrix-to-tensorflow-sparsetensor-mini-batch-gradient-descent
+def convert_sparse_matrix_to_sparse_tensor(X):
+    coo = X.tocoo()
+    indices = np.mat([coo.row, coo.col]).transpose()
+    return tf.SparseTensor(indices, coo.data, coo.shape)
