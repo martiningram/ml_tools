@@ -135,22 +135,22 @@ def ard_rbf_kernel_old(x1, x2, lengthscales, alpha, jitter=1e-5):
     kern = alpha**2 * tf.exp(-0.5 * exponent)
 
     # Jitter this a little bit
-    kern = tf.matrix_set_diag(kern, tf.matrix_diag_part(kern) + jitter)
+    kern = tf.linalg.set_diag(kern, tf.linalg.diag_part(kern) + jitter)
 
     return kern
 
 
-def bias_kernel(x1, x2, sd, jitter=1e-5):
+def bias_kernel(x1, x2, sd, jitter=1e-5, diag_only=False):
 
-    # TODO: Add diag_only option
+    output_rows = int(x1.shape[0])
+    output_cols = int(x2.shape[0])
 
-    output_rows = int(x1.get_shape()[0])
-    output_cols = int(x2.get_shape()[0])
-
-    to_multiply = tf.ones((output_rows, output_cols), dtype=x1.dtype)
-
-    kern = sd**2 * to_multiply
-    kern = tf.linalg.set_diag(kern, tf.linalg.diag_part(kern) + jitter)
+    if diag_only:
+        kern = sd**2 * tf.ones(output_cols, dtype=x1.dtype) + jitter
+    else:
+        to_multiply = tf.ones((output_rows, output_cols), dtype=x1.dtype)
+        kern = sd**2 * to_multiply
+        kern = tf.linalg.set_diag(kern, tf.linalg.diag_part(kern) + jitter)
 
     return kern
 

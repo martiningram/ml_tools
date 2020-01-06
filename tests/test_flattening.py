@@ -1,6 +1,5 @@
 import numpy as np
 import tensorflow as tf
-tf.enable_eager_execution()
 from ml_tools.flattening import (flatten_and_summarise, reconstruct_np,
                                  reconstruct_tf)  # NOQA
 

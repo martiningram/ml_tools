@@ -1,6 +1,5 @@
 import numpy as np
 import tensorflow as tf
-tf.enable_eager_execution()
 from ml_tools.tf_kernels import (
     ard_rbf_kernel, ard_rbf_kernel_old, compute_diag_weighted_square_distance,
     compute_weighted_square_distances) # NOQA
