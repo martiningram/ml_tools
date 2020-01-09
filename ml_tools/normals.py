@@ -3,7 +3,7 @@ import pandas as pd
 from scipy.stats import norm
 import matplotlib.pyplot as plt
 from scipy.linalg import inv, cho_factor, cho_solve
-from scipy.special import expit
+from scipy.special import expit, logsumexp
 
 
 class MultivariateNormal(object):
@@ -308,3 +308,36 @@ def mvn_kl(mu_0, sigma_0, mu_1, sigma_1):
     term_2 = 0.5 * np.trace(solved)
 
     return term_1 + term_2
+
+
+def calculate_log_joint_bernoulli_likelihood(
+        latent_prob_samples: np.ndarray, outcomes: np.ndarray,
+        link: str = 'probit') -> float:
+    # latent_prob_samples is n_samples x n_outcomes array of probabilities on
+    # the probit scale
+    # outcomes is (n_outcomes,) array of binary outcomes (1 and 0)
+    assert(latent_prob_samples.shape[1] == outcomes.shape[0])
+
+    # Make sure broadcasting is unambiguous
+    assert(latent_prob_samples.shape[0] != outcomes.shape[0])
+
+    n_samples = latent_prob_samples.shape[0]
+
+    # Get log likelihood for each draw
+
+    assert link in ['logit', 'probit'], \
+        'Only logit and probit links supported!'
+
+    if link == 'probit':
+        individual_liks = np.sum(
+            outcomes * norm.logcdf(latent_prob_samples)
+            + (1 - outcomes) * norm.logcdf(-latent_prob_samples),
+            axis=1)
+    else:
+        individual_liks = np.sum(
+            outcomes * np.log(expit(latent_prob_samples))
+            + (1 - outcomes) * np.log(1 - expit(latent_prob_samples)),
+            axis=1)
+
+    # Compute the Monte Carlo expectation
+    return logsumexp(individual_liks - np.log(n_samples))
