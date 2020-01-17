@@ -341,3 +341,43 @@ def calculate_log_joint_bernoulli_likelihood(
 
     # Compute the Monte Carlo expectation
     return logsumexp(individual_liks - np.log(n_samples))
+
+
+def normal_cdf_integral(mu, sigma, log=False):
+    """
+    Computes the result of E[Phi(X)], where:
+    X ~ N(mu, sigma^2)
+    Phi is the normal CDF
+    Credit to:
+        https://mathoverflow.net/questions/101469/integration-of-the-product-of-pdf-cdf-of-normal-distribution/135405#135405
+    """
+
+    b = -mu / sigma
+    a = 1 / sigma
+
+    fun = norm.logcdf if log else norm.cdf
+
+    return fun(-b / np.sqrt(a**2 + 1))
+
+
+def generate_random_pos_def(n):
+    # Generates a positive definite matrix of size [n x n].
+    random_mat = np.random.randn(n, n)
+    return random_mat @ random_mat.T + np.eye(n)
+
+
+def moments_of_linear_combination_rvs(means_1, cov_1, means_2, cov_2):
+    # Computes the mean and variance of the linear combination of random
+    # variables:
+    # S = sum(X_i Y_i)
+    # Where X_i ~ N(means_1, cov_1)
+    # Y_i ~ N(means_2, cov_2)
+    # Note that the vectors X and Y are assumed independent.
+    term_1 = cov_1 * cov_2
+    term_2 = cov_2 * np.outer(means_1, means_1)
+    term_3 = cov_1 * np.outer(means_2, means_2)
+
+    variance_of_sum = np.sum(term_1 + term_2 + term_3)
+    mean_of_sum = np.sum(means_1 * means_2)
+
+    return mean_of_sum, variance_of_sum

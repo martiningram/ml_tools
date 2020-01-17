@@ -1,14 +1,16 @@
+import numpy as np
 import matplotlib.pyplot as plt
 
 
-def plot_with_error_bars(x, lower, mean, upper, ax=None, **kwargs):
+def plot_with_error_bars(x, lower, mean, upper, ax=None, fill_kwargs={},
+                         **plot_kwargs):
 
     if ax is None:
         _, ax = plt.subplots(1, 1)
 
     # Plot the median
-    ax.plot(x, mean, **kwargs)
-    ax.fill_between(x, lower, upper, alpha=0.5)
+    ax.plot(x, mean, **plot_kwargs)
+    ax.fill_between(x, lower, upper, alpha=0.5, **fill_kwargs)
 
     return ax
 
@@ -29,3 +31,23 @@ def add_legend_on_right(ax):
     ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 
     return ax
+
+
+def conditional_plot_2d(pred_fun, dims_to_vary, n_covs, n_points=100,
+                        other_feat_vals=0., lower_lim=-2, upper_lim=2):
+
+    # Returns arrays for plotting contour plots / surface plots.
+    # Predicts by varying x and y between lower_lim and upper_lim while
+    # keeping all other covariates fixed at other_feat_vals.
+
+    x = np.linspace(lower_lim, upper_lim, n_points)
+    y = np.linspace(lower_lim, upper_lim, n_points)
+
+    grid = np.meshgrid(x, y)
+    to_predict = np.stack([grid[0].reshape(-1), grid[1].reshape(-1)], axis=1)
+    base_vals = np.tile(other_feat_vals, (n_points * n_points, n_covs))
+    base_vals[:, dims_to_vary] = to_predict
+    predicted = pred_fun(base_vals)
+    reshaped = np.reshape(predicted, (n_points, n_points))
+
+    return grid[0], grid[1], reshaped
