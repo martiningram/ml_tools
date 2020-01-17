@@ -383,7 +383,8 @@ def moments_of_linear_combination_rvs(means_1, cov_1, means_2, cov_2):
     return mean_of_sum, variance_of_sum
 
 
-def moments_of_linear_combination_rvs_batch(means_1, cov_1, means_2, cov_2):
+def moments_of_linear_combination_rvs_batch(means_1, cov_1, means_2, cov_2,
+                                            einsum_fun=np.einsum):
     # Same as `moments_of_linear_combination_rvs`, but the random variables
     # now come in (potentially different-sized) batches:
     # means_1 is n x n_l
@@ -392,11 +393,12 @@ def moments_of_linear_combination_rvs_batch(means_1, cov_1, means_2, cov_2):
     # cov_2 is (n_out x n_l x n_l)
     # Produces the means and variances of linear combinations, both of shape
     # (n x n_out).
-    pred_means = np.einsum('ij,kj->ik', means_1, means_2)
 
-    term_1 = np.einsum('ijk,ljk->il', cov_1, cov_2)
-    term_2 = np.einsum('ijk,lj,lk->il', cov_1, means_2, means_2)
-    term_3 = np.einsum('ijk,lj,lk->li', cov_2, means_1, means_1)
+    pred_means = einsum_fun('ij,kj->ik', means_1, means_2)
+    term_1 = einsum_fun('ijk,ljk->il', cov_1, cov_2)
+    term_2 = einsum_fun('ijk,lj,lk->il', cov_1, means_2, means_2)
+    term_3 = einsum_fun('ijk,lj,lk->li', cov_2, means_1, means_1)
+
     pred_vars = term_1 + term_2 + term_3
 
     return pred_means, pred_vars
