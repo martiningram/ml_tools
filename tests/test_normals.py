@@ -1,6 +1,7 @@
 import numpy as np
 from ml_tools.normals import (moments_of_linear_combination_rvs,
-                              generate_random_pos_def)
+                              generate_random_pos_def,
+                              moments_of_linear_combination_rvs_batch)
 
 
 def test_moments_of_linear_combination_rvs():
@@ -32,3 +33,42 @@ def test_moments_of_linear_combination_rvs():
     # less arbitrarily. I'm not entirely sure what else to do.
     assert np.isclose(sum_mean, sim_mean, rtol=1e-2)
     assert np.isclose(sum_var, sim_var, rtol=1e-2)
+
+
+def test_moments_of_linear_combination_rvs_batch():
+
+    n = 10
+    n_l = 4
+    n_out = 6
+
+    means_1 = np.random.randn(n, n_l)
+    means_2 = np.random.randn(n_out, n_l)
+
+    cov_1 = np.stack([generate_random_pos_def(n_l) for _ in range(n)])
+    cov_2 = np.stack([generate_random_pos_def(n_l) for _ in range(n_out)])
+
+    batch_means, batch_vars = moments_of_linear_combination_rvs_batch(
+        means_1, cov_1, means_2, cov_2)
+
+    # Do a loop version:
+    vars = np.zeros((n, n_out))
+    means = np.zeros((n, n_out))
+
+    for i in range(n):
+        for j in range(n_out):
+
+            cur_mean_1 = means_1[i]
+            cur_mean_2 = means_2[j]
+
+            cur_cov_1 = cov_1[i]
+            cur_cov_2 = cov_2[j]
+
+            cur_sum_mean, cur_sum_cov = \
+                moments_of_linear_combination_rvs(cur_mean_1, cur_cov_1,
+                                                  cur_mean_2, cur_cov_2)
+
+            means[i, j] = cur_sum_mean
+            vars[i, j] = cur_sum_cov
+
+    assert np.allclose(batch_means, means)
+    assert np.allclose(batch_vars, vars)
