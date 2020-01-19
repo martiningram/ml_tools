@@ -16,14 +16,22 @@ def compute_sparse_inverse(sparse_matrix):
     return inverse
 
 
-def pos_def_mat_from_vector(vec, target_size):
-    # I can't differentiate this with autograd. Sad days. Maybe there's some
-    # kind of workaround?
+def pos_def_mat_from_vector(vec, target_size, jitter=0):
 
     L = np.zeros((target_size, target_size))
     L[np.tril_indices(target_size)] = vec
 
-    return np.matmul(L, L.T)
+    return np.matmul(L, L.T) + np.eye(target_size) * jitter
+
+
+def vector_from_pos_def_mat(pos_def_mat, jitter=0):
+
+    # Subtract jitter
+    pos_def_mat -= np.eye(pos_def_mat.shape[0]) * jitter
+    L = np.linalg.cholesky(pos_def_mat)
+    elts = np.tril_indices_from(L)
+
+    return L[elts]
 
 
 def num_triangular_elts(mat_size, include_diagonal=True):
