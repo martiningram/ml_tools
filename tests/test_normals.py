@@ -1,7 +1,8 @@
 import numpy as np
 from ml_tools.normals import (moments_of_linear_combination_rvs,
                               generate_random_pos_def,
-                              moments_of_linear_combination_rvs_batch)
+                              moments_of_linear_combination_rvs_batch,
+                              moments_of_linear_combination_rvs_selected)
 
 
 def test_moments_of_linear_combination_rvs():
@@ -72,3 +73,35 @@ def test_moments_of_linear_combination_rvs_batch():
 
     assert np.allclose(batch_means, means)
     assert np.allclose(batch_vars, vars)
+
+
+def test_moments_of_linear_combination_rvs_selected():
+
+    n = 10
+    n_l = 4
+    n_out = 6
+
+    to_select = np.random.choice(n_out, size=n, replace=True)
+
+    means_1 = np.random.randn(n, n_l)
+    means_2 = np.random.randn(n_out, n_l)
+
+    cov_1 = np.stack([generate_random_pos_def(n_l) for _ in range(n)])
+    cov_2 = np.stack([generate_random_pos_def(n_l) for _ in range(n_out)])
+
+    # First compute all of them
+    batch_means, batch_vars = moments_of_linear_combination_rvs_batch(
+        means_1, cov_1, means_2, cov_2)
+
+    # This produces:
+    # [n x n_out]
+    # for both of them. I'm only interested in the "to_select" column
+    # of this.
+    relevant_means_2 = means_2[to_select]
+    relevant_covs_2 = cov_2[to_select]
+
+    means_subset, vars_subset = moments_of_linear_combination_rvs_selected(
+        means_1, cov_1, relevant_means_2, relevant_covs_2)
+
+    assert np.allclose(means_subset, batch_means[np.arange(n), to_select])
+    assert np.allclose(vars_subset, batch_vars[np.arange(n), to_select])

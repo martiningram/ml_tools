@@ -402,3 +402,22 @@ def moments_of_linear_combination_rvs_batch(means_1, cov_1, means_2, cov_2,
     pred_vars = term_1 + term_2 + term_3
 
     return pred_means, pred_vars
+
+
+def moments_of_linear_combination_rvs_selected(means_1, cov_1, means_2, cov_2,
+                                               einsum_fun=np.einsum):
+    # means_1 is n x n_l
+    # means_2 is n x n_l
+    # cov_1 is (n x n_l x n_l)
+    # cov_2 is (n x n_l x n_l)
+    # In this version, the output is [n,] for the means and variances resulting
+    # from computing the linear combinations of these _matched_ elements.
+
+    pred_means = einsum_fun('ij,ij->i', means_1, means_2)
+    term_1 = einsum_fun('ijk,ijk->i', cov_1, cov_2)
+    term_2 = einsum_fun('ijk,ij,ik->i', cov_1, means_2, means_2)
+    term_3 = einsum_fun('ijk,ij,ik->i', cov_2, means_1, means_1)
+
+    pred_vars = term_1 + term_2 + term_3
+
+    return pred_means, pred_vars
