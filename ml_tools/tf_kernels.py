@@ -145,11 +145,12 @@ def bias_kernel(x1, x2, sd, jitter=1e-5, diag_only=False):
     output_rows = int(x1.shape[0])
     output_cols = int(x2.shape[0])
 
+    shape = tf.stack([output_rows, output_cols])
+
     if diag_only:
-        kern = sd**2 * tf.ones(output_cols, dtype=x1.dtype) + jitter
+        kern = tf.fill((output_cols,), sd**2) + jitter
     else:
-        to_multiply = tf.ones((output_rows, output_cols), dtype=x1.dtype)
-        kern = sd**2 * to_multiply
+        kern = tf.fill(shape, sd**2)
         kern = tf.linalg.set_diag(kern, tf.linalg.diag_part(kern) + jitter)
 
     return kern

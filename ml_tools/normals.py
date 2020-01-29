@@ -183,6 +183,7 @@ def conditional_mean_and_cov(mu_x, mu_y, y, A, C, B):
 
     x | y.
     """
+    # TODO: Double-check this function!
 
     # Calculate the conditional mean
     difference = y - mu_y
@@ -190,7 +191,7 @@ def conditional_mean_and_cov(mu_x, mu_y, y, A, C, B):
     conditional_mean = mu_x + np.matmul(C, cho_solve(b_chol, difference))
     conditional_cov = A - np.matmul(C, cho_solve(b_chol, C.T))
 
-    return {'mean': conditional_mean, 'cov': conditional_cov}
+    return conditional_mean, conditional_cov
 
 
 def conjugate_update_univariate(prior_mu, prior_var, lik_mu, lik_var):
