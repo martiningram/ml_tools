@@ -148,7 +148,7 @@ def bias_kernel(x1, x2, sd, jitter=1e-5, diag_only=False):
     shape = tf.stack([output_rows, output_cols])
 
     if diag_only:
-        kern = tf.fill((output_cols,), sd**2) + jitter
+        kern = tf.fill((min(output_cols, output_rows),), sd**2) + jitter
     else:
         kern = tf.fill(shape, sd**2)
         kern = tf.linalg.set_diag(kern, tf.linalg.diag_part(kern) + jitter)
@@ -195,3 +195,32 @@ def ard_rbf_kernel_batch(x1, x2, lengthscales, alpha, jitter=1e-5):
     kern = tf.matrix_set_diag(kern, tf.matrix_diag_part(kern) + jitter)
 
     return kern
+
+
+def random_intercept_kernel(x1, x2, sd, jitter=1e-5, diag_only=False):
+    # x1, x2 must be vectors
+    # returns sd^2 if they are the same
+    # 0 otherwise.
+
+    assert len(x1.shape) == 1
+
+    output_rows = int(x1.shape[0])
+    output_cols = int(x2.shape[0])
+    diag_length = min(output_rows, output_cols)
+
+    if diag_only:
+        return tf.fill((diag_length, ), sd**2) + jitter
+    else:
+
+        # Perhaps there is a more efficient way but I'll use broadcasting for
+        # now
+        x1 = tf.expand_dims(x1, axis=1)
+        x2 = tf.expand_dims(x2, axis=0)
+
+        is_equal = tf.equal(x1, x2)
+        float_version = tf.cast(is_equal, sd.dtype)
+
+        float_version = tf.linalg.set_diag(
+            float_version, tf.linalg.diag_part(float_version) + jitter)
+
+        return float_version * sd**2

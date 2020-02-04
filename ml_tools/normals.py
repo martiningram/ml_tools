@@ -422,3 +422,23 @@ def moments_of_linear_combination_rvs_selected(means_1, cov_1, means_2, cov_2,
     pred_vars = term_1 + term_2 + term_3
 
     return pred_means, pred_vars
+
+
+def moments_of_linear_combination_rvs_selected_independent(
+        means_1, var_1, means_2, var_2, sum_fun=np.sum):
+    # Same as `moments_of_linear_combination_rvs_selected`, but assumes that
+    # the elements of both vectors are uncorrelated.
+    # means_1 is n x n_l
+    # means_2 is n x n_l
+    # var_1 is (n x n_l)
+    # var_2 is (n x n_l)
+    # In this version, the output is [n,] for the means and variances resulting
+    # from computing the linear combinations of these _matched_ elements.
+
+    pred_means = sum_fun(means_1 * means_2, axis=1)
+    term_1 = sum_fun(var_1 * var_2, axis=1)
+    term_2 = sum_fun(var_2 * means_1**2, axis=1)
+    term_3 = sum_fun(var_1 * means_2**2, axis=1)
+    pred_vars = term_1 + term_2 + term_3
+
+    return pred_means, pred_vars

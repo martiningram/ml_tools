@@ -1,8 +1,9 @@
 import numpy as np
-from ml_tools.normals import (moments_of_linear_combination_rvs,
-                              generate_random_pos_def,
-                              moments_of_linear_combination_rvs_batch,
-                              moments_of_linear_combination_rvs_selected)
+from ml_tools.normals import (
+    moments_of_linear_combination_rvs, generate_random_pos_def,
+    moments_of_linear_combination_rvs_batch,
+    moments_of_linear_combination_rvs_selected,
+    moments_of_linear_combination_rvs_selected_independent)
 
 
 def test_moments_of_linear_combination_rvs():
@@ -105,3 +106,42 @@ def test_moments_of_linear_combination_rvs_selected():
 
     assert np.allclose(means_subset, batch_means[np.arange(n), to_select])
     assert np.allclose(vars_subset, batch_vars[np.arange(n), to_select])
+
+
+def test_moments_of_linear_combination_rvs_selected_independent():
+
+    n = 10
+    n_l = 4
+    n_out = 6
+
+    to_select = np.random.choice(n_out, size=n, replace=True)
+
+    means_1 = np.random.randn(n, n_l)
+    means_2 = np.random.randn(n_out, n_l)
+
+    # Generate diagonal covariance matrices
+    cov_1 = np.stack([np.eye(n_l) * generate_random_pos_def(n_l) for _ in
+                      range(n)])
+    cov_2 = np.stack([np.eye(n_l) * generate_random_pos_def(n_l) for _ in
+                      range(n_out)])
+
+    # This produces:
+    # [n x n_out]
+    # for both of them. I'm only interested in the "to_select" column
+    # of this.
+    relevant_means_2 = means_2[to_select]
+    relevant_covs_2 = cov_2[to_select]
+
+    means_subset, vars_subset = moments_of_linear_combination_rvs_selected(
+        means_1, cov_1, relevant_means_2, relevant_covs_2)
+
+    # Now run the same, but with the individual variances
+    var_1 = np.array([np.diag(x) for x in cov_1])
+    relevant_var_2 = np.array([np.diag(x) for x in relevant_covs_2])
+
+    means_subset_ind, vars_subset_ind = \
+        moments_of_linear_combination_rvs_selected_independent(
+            means_1, var_1, relevant_means_2, relevant_var_2)
+
+    assert np.allclose(means_subset_ind, means_subset)
+    assert np.allclose(vars_subset, vars_subset_ind)
