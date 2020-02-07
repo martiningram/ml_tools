@@ -5,6 +5,7 @@ import tensorflow as tf
 EPS = 1e-12
 
 
+@tf.function
 def compute_weighted_square_distances(x1, x2, lengthscales):
 
     assert x1.shape[1] == x2.shape[1]
@@ -25,6 +26,7 @@ def compute_weighted_square_distances(x1, x2, lengthscales):
     return tf.maximum(combined, 0.)
 
 
+@tf.function
 def compute_diag_weighted_square_distance(x1, x2, lengthscales):
 
     z1 = x1 / tf.expand_dims(lengthscales, axis=0)
@@ -41,6 +43,7 @@ def compute_diag_weighted_square_distance(x1, x2, lengthscales):
     return tf.maximum(norms + cross_terms, 0.)
 
 
+@tf.function
 def ard_rbf_kernel(x1, x2, lengthscales, alpha, jitter=1e-5, diag_only=False):
 
     if diag_only:
@@ -58,6 +61,7 @@ def ard_rbf_kernel(x1, x2, lengthscales, alpha, jitter=1e-5, diag_only=False):
     return kernel
 
 
+@tf.function
 def matern_kernel_32(x1, x2, alpha, lengthscales, jitter=1e-5,
                      diag_only=False):
 
@@ -77,6 +81,7 @@ def matern_kernel_32(x1, x2, alpha, lengthscales, jitter=1e-5,
     return kernel
 
 
+@tf.function
 def matern_kernel_12(x1, x2, alpha, lengthscales, jitter=1e-5,
                      diag_only=False):
 
@@ -96,6 +101,7 @@ def matern_kernel_12(x1, x2, alpha, lengthscales, jitter=1e-5,
     return kernel
 
 
+@tf.function
 def add_jitter(kern, jitter=1e-5, diag_only=False):
 
     if diag_only:
@@ -140,6 +146,7 @@ def ard_rbf_kernel_old(x1, x2, lengthscales, alpha, jitter=1e-5):
     return kern
 
 
+@tf.function
 def bias_kernel(x1, x2, sd, jitter=1e-5, diag_only=False):
 
     output_rows = int(x1.shape[0])
