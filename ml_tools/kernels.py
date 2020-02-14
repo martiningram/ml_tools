@@ -1,5 +1,7 @@
 import numpy as np
 
+EPS = 1e-12
+
 
 def rbf_kernel_1d(x1, x2, alpha, lengthscales):
 
@@ -92,7 +94,7 @@ def add_jitter(kernel, jitter=1e-5):
 def matern_kernel_32(x1, x2, alpha, lengthscales, jitter=1e-5):
 
     r_sq = compute_weighted_square_distances(x1, x2, lengthscales)
-    r = np.sqrt(r_sq)
+    r = np.sqrt(r_sq + EPS)
 
     kernel = alpha ** 2 * (1 + np.sqrt(3) * r) * np.exp(-np.sqrt(3) * r)
     kernel = add_jitter(kernel, jitter)
