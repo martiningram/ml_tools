@@ -2,7 +2,8 @@ import numpy as np
 import tensorflow as tf
 
 
-EPS = 1e-12
+EPS = tf.constant(1e-12)
+DEFAULT_JITTER = tf.constant(1e-5)
 
 
 @tf.function
@@ -44,7 +45,8 @@ def compute_diag_weighted_square_distance(x1, x2, lengthscales):
 
 
 @tf.function
-def ard_rbf_kernel(x1, x2, lengthscales, alpha, jitter=1e-5, diag_only=False):
+def ard_rbf_kernel(x1, x2, lengthscales, alpha, jitter=DEFAULT_JITTER,
+                   diag_only=False):
 
     if diag_only:
 
@@ -62,7 +64,7 @@ def ard_rbf_kernel(x1, x2, lengthscales, alpha, jitter=1e-5, diag_only=False):
 
 
 @tf.function
-def matern_kernel_32(x1, x2, alpha, lengthscales, jitter=1e-5,
+def matern_kernel_32(x1, x2, alpha, lengthscales, jitter=DEFAULT_JITTER,
                      diag_only=False):
 
     if diag_only:
@@ -82,7 +84,7 @@ def matern_kernel_32(x1, x2, alpha, lengthscales, jitter=1e-5,
 
 
 @tf.function
-def matern_kernel_12(x1, x2, alpha, lengthscales, jitter=1e-5,
+def matern_kernel_12(x1, x2, alpha, lengthscales, jitter=DEFAULT_JITTER,
                      diag_only=False):
 
     if diag_only:
@@ -102,7 +104,7 @@ def matern_kernel_12(x1, x2, alpha, lengthscales, jitter=1e-5,
 
 
 @tf.function
-def add_jitter(kern, jitter=1e-5, diag_only=False):
+def add_jitter(kern, jitter=DEFAULT_JITTER, diag_only=False):
 
     if diag_only:
 
@@ -115,7 +117,7 @@ def add_jitter(kern, jitter=1e-5, diag_only=False):
     return kern
 
 
-def ard_rbf_kernel_old(x1, x2, lengthscales, alpha, jitter=1e-5):
+def ard_rbf_kernel_old(x1, x2, lengthscales, alpha, jitter=DEFAULT_JITTER):
 
     # x1 is N1 x D
     # x2 is N2 x D (and N1 can be equal to N2)
@@ -147,7 +149,7 @@ def ard_rbf_kernel_old(x1, x2, lengthscales, alpha, jitter=1e-5):
 
 
 @tf.function
-def bias_kernel(x1, x2, sd, jitter=1e-5, diag_only=False):
+def bias_kernel(x1, x2, sd, jitter=DEFAULT_JITTER, diag_only=False):
 
     output_rows = int(x1.shape[0])
     output_cols = int(x2.shape[0])
@@ -163,7 +165,7 @@ def bias_kernel(x1, x2, sd, jitter=1e-5, diag_only=False):
     return kern
 
 
-def ard_rbf_kernel_batch(x1, x2, lengthscales, alpha, jitter=1e-5):
+def ard_rbf_kernel_batch(x1, x2, lengthscales, alpha, jitter=DEFAULT_JITTER):
 
     # x1 is N1 x D
     # x2 is N2 x D (and N1 can be equal to N2)
@@ -204,7 +206,8 @@ def ard_rbf_kernel_batch(x1, x2, lengthscales, alpha, jitter=1e-5):
     return kern
 
 
-def random_intercept_kernel(x1, x2, sd, jitter=1e-5, diag_only=False):
+def random_intercept_kernel(x1, x2, sd, jitter=DEFAULT_JITTER,
+                            diag_only=False):
     # x1, x2 must be vectors
     # returns sd^2 if they are the same
     # 0 otherwise.
