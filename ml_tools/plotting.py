@@ -51,3 +51,25 @@ def conditional_plot_2d(pred_fun, dims_to_vary, n_covs, n_points=100,
     reshaped = np.reshape(predicted, (n_points, n_points))
 
     return grid[0], grid[1], reshaped
+
+
+def conditional_plot_1d_all(pred_fun, n_covs, n_points=100, other_feat_vals=0.,
+                            lower_lim=-2, upper_lim=2):
+
+    # Returns arrays for plotting contour plots / surface plots.
+    # Predicts by varying x and y between lower_lim and upper_lim while
+    # keeping all other covariates fixed at other_feat_vals.
+    x = np.linspace(lower_lim, upper_lim, n_points)
+
+    predictions = np.zeros((n_points, n_covs))
+
+    for cur_cov in range(n_covs):
+
+        base_vals = np.tile(other_feat_vals, (n_points, n_covs))
+        base_vals[:, cur_cov] = x
+
+        predicted = pred_fun(base_vals)
+
+        predictions[:, cur_cov] = predicted
+
+    return x, predictions
