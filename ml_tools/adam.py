@@ -19,9 +19,9 @@ def initialise_state(n_params) -> AdamState:
     return AdamState(m=np.zeros(n_params), v=np.zeros(n_params), t=0)
 
 
-def adam_step(theta: np.ndarray,
+def adam_step(cur_state: AdamState,
+              theta: np.ndarray,
               grad: np.ndarray,
-              cur_state: AdamState,
               step_size: float,
               beta_1: float = 0.9,
               beta_2: float = 0.999,
@@ -31,9 +31,9 @@ def adam_step(theta: np.ndarray,
     grad and the Adam method for stochastic optimisation.
 
     Args:
+        cur_state: Previous estimates of first and second moments.
         theta: Current parameter setting.
         grad: Gradient of the objective with respect to theta.
-        cur_state: Previous estimates of first and second moments.
         step_size: The step size to use, also known as alpha in the original
             paper.
         beta_1: Exponential decay rate for the estimates of the first moment
@@ -48,8 +48,9 @@ def adam_step(theta: np.ndarray,
     v_t = beta_2 * cur_state.v + (1 - beta_2) * grad**2
 
     # TODO: Note that the Adam paper writes that these two lines can be turned
-    # into 2. However, I this way easier to understand and I don't think
-    # efficiency will be very different. But can reconsider in the future.
+    # into 2. However, I think this way is easier to understand and I don't
+    # think efficiency will be very different. But can reconsider in the
+    # future.
     m_hat_t = m_t / (1 - beta_1**(cur_state.t + 1))
     v_hat_t = v_t / (1 - beta_2**(cur_state.t + 1))
     theta_t = theta - step_size * m_hat_t / (np.sqrt(v_hat_t) + eps)
