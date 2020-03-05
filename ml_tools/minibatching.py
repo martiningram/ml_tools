@@ -2,6 +2,8 @@ import numpy as np
 from functools import partial
 from tqdm import tqdm
 from typing import Dict, Tuple, Callable, Any, Optional
+from os.path import join
+import os
 
 
 def get_batch_indices(indices: np.ndarray, batch_size: int, cur_start: int) \
@@ -74,7 +76,7 @@ def optimise_minibatching(
         to_optimise: Callable[[np.ndarray, Any],
                               Tuple[np.ndarray, np.ndarray]],
         opt_step_fun: Callable[[Any, np.ndarray, np.ndarray],
-                               [Any, np.ndarray]],
+                               Tuple[Any, np.ndarray]],
         theta: np.ndarray,
         batch_size: int,
         n_steps: int,
@@ -115,9 +117,13 @@ def optimise_minibatching(
     if log_file is not None:
 
         if append_to_log_file:
-            log_file = open(log_file, 'a')
+            log_file_handle = open(log_file, 'a')
         else:
-            log_file = open(log_file, 'w')
+            log_file_handle = open(log_file, 'w')
+
+    else:
+
+        log_file_handle = None
 
     loss_log = list()
 
@@ -130,15 +136,19 @@ def optimise_minibatching(
         cur_opt_fun = partial(to_optimise, **cur_arrays)
         obj, grad = cur_opt_fun(theta)
 
-        opt_state, theta = opt_step_fun(opt_state, theta, grad)
+        theta, opt_state = opt_step_fun(opt_state, theta, grad)
 
-        if log_file is not None:
-            log_file.write(f'{obj}\n')
-            log_file.flush()
+        if log_file_handle is not None:
+
+            log_dir = os.path.split(log_file)[0]
+
+            np.savez(join(log_dir, f'adam_state_{i}'), **opt_state._asdict())
+            log_file_handle.write(f'{obj}\n')
+            log_file_handle.flush()
 
         loss_log.append(obj)
 
     if log_file is not None:
-        log_file.close()
+        log_file_handle.close()
 
     return theta, loss_log
