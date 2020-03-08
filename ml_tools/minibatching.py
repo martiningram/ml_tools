@@ -83,7 +83,8 @@ def optimise_minibatching(
         n_data: int,
         log_file: Optional[str] = None,
         append_to_log_file: bool = True,
-        opt_state: Any = None):
+        opt_state: Any = None,
+        save_opt_state: bool = False):
     """
     Optimises a function using minibatching.
 
@@ -142,7 +143,10 @@ def optimise_minibatching(
 
             log_dir = os.path.split(log_file)[0]
 
-            np.savez(join(log_dir, f'adam_state_{i}'), **opt_state._asdict())
+            if save_opt_state:
+                np.savez(join(log_dir, f'adam_state_{i}'),
+                         **opt_state._asdict())
+
             log_file_handle.write(f'{obj}\n')
             log_file_handle.flush()
 
@@ -151,4 +155,4 @@ def optimise_minibatching(
     if log_file is not None:
         log_file_handle.close()
 
-    return theta, loss_log
+    return theta, loss_log, opt_state
