@@ -4,6 +4,7 @@ from tqdm import tqdm
 from typing import Dict, Tuple, Callable, Any, Optional
 from os.path import join
 import os
+from ml_tools.flattening import reconstruct_np
 
 
 def get_batch_indices(indices: np.ndarray, batch_size: int, cur_start: int) \
@@ -84,7 +85,9 @@ def optimise_minibatching(
         log_file: Optional[str] = None,
         append_to_log_file: bool = True,
         opt_state: Any = None,
-        save_opt_state: bool = False):
+        save_opt_state: bool = False,
+        save_every: Optional[int] = None,
+        summary: Optional[Any] = None):
     """
     Optimises a function using minibatching.
 
@@ -143,9 +146,20 @@ def optimise_minibatching(
 
             log_dir = os.path.split(log_file)[0]
 
-            if save_opt_state:
-                np.savez(join(log_dir, f'adam_state_{i}'),
-                         **opt_state._asdict())
+            if i % save_every == 0:
+
+                if save_opt_state:
+                    np.savez(join(log_dir, f'adam_state_{i}'),
+                             **opt_state._asdict())
+
+                if summary is not None:
+
+                    theta_dict = reconstruct_np(theta, summary)
+                    np.savez(join(log_dir, f'theta_{i}'), **theta_dict)
+
+                else:
+
+                    np.savez(join(log_dir, f'theta_{i}'), theta)
 
             log_file_handle.write(f'{obj}\n')
             log_file_handle.flush()
