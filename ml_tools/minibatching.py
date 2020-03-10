@@ -1,9 +1,8 @@
+import os
 import numpy as np
 from functools import partial
 from tqdm import tqdm
-from typing import Dict, Tuple, Callable, Any, Optional
-from os.path import join
-import os
+from typing import Dict, Tuple, Callable, Any, IO
 from ml_tools.flattening import reconstruct_np
 
 
@@ -78,16 +77,12 @@ def optimise_minibatching(
                               Tuple[np.ndarray, np.ndarray]],
         opt_step_fun: Callable[[Any, np.ndarray, np.ndarray],
                                Tuple[Any, np.ndarray]],
+        opt_state: Any,
         theta: np.ndarray,
         batch_size: int,
         n_steps: int,
         n_data: int,
-        log_file: Optional[str] = None,
-        append_to_log_file: bool = True,
-        opt_state: Any = None,
-        save_opt_state: bool = False,
-        save_every: Optional[int] = None,
-        summary: Optional[Any] = None):
+        callback: Callable[[int, float, np.ndarray, np.ndarray, Any], None]):
     """
     Optimises a function using minibatching.
 
@@ -118,17 +113,6 @@ def optimise_minibatching(
     indices = np.random.permutation(n_data)
     cur_position = 0
 
-    if log_file is not None:
-
-        if append_to_log_file:
-            log_file_handle = open(log_file, 'a')
-        else:
-            log_file_handle = open(log_file, 'w')
-
-    else:
-
-        log_file_handle = None
-
     loss_log = list()
 
     for i in tqdm(range(n_steps)):
@@ -140,33 +124,51 @@ def optimise_minibatching(
         cur_opt_fun = partial(to_optimise, **cur_arrays)
         obj, grad = cur_opt_fun(theta)
 
+        # Callback
+        callback(i, obj, theta, grad, opt_state)
+
         theta, opt_state = opt_step_fun(opt_state, theta, grad)
-
-        if log_file_handle is not None:
-
-            log_dir = os.path.split(log_file)[0]
-
-            if i % save_every == 0:
-
-                if save_opt_state:
-                    np.savez(join(log_dir, f'adam_state_{i}'),
-                             **opt_state._asdict())
-
-                if summary is not None:
-
-                    theta_dict = reconstruct_np(theta, summary)
-                    np.savez(join(log_dir, f'theta_{i}'), **theta_dict)
-
-                else:
-
-                    np.savez(join(log_dir, f'theta_{i}'), theta)
-
-            log_file_handle.write(f'{obj}\n')
-            log_file_handle.flush()
-
         loss_log.append(obj)
 
-    if log_file is not None:
-        log_file_handle.close()
-
     return theta, loss_log, opt_state
+
+
+def loss_log_callback(step: int, loss: float, theta: np.ndarray,
+                      grad: np.ndarray, opt_state: Any, file_handle: IO):
+
+    file_handle.write(f'{step},{loss}\n')
+    file_handle.flush()
+
+
+def save_opt_state_callback(step: int, loss: float, theta: np.ndarray,
+                            grad: np.ndarray, opt_state: Any, target_dir: str,
+                            save_every: int):
+
+    os.makedirs(target_dir, exist_ok=True)
+
+    cur_target_file = os.path.join(target_dir, f'opt_state_{step}.npz')
+    state_dict = opt_state._asdict()
+    np.savez(cur_target_file, **state_dict)
+
+
+def save_theta_and_grad_callback(step: int, loss: float, theta: np.ndarray,
+                                 grad: np.ndarray, opt_state: Any,
+                                 target_dir: str, summary: Any,
+                                 save_every: int):
+
+    os.makedirs(target_dir, exist_ok=True)
+
+    if step % save_every == 0:
+
+        # Reconstruct
+        theta_dict = reconstruct_np(theta, summary)
+        grad_dict = reconstruct_np(grad, summary)
+
+        theta_dict['loss'] = loss
+
+        # Save
+        theta_target = os.path.join(target_dir, f'theta_{step}.npz')
+        grad_target = os.path.join(target_dir, f'grad_{step}.npz')
+
+        np.savez(theta_target, **theta_dict)
+        np.savez(grad_target, **grad_dict)
