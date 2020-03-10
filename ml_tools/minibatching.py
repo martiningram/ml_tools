@@ -165,6 +165,8 @@ def save_theta_and_grad_callback(step: int, loss: float, theta: np.ndarray,
         grad_dict = reconstruct_np(grad, summary)
 
         theta_dict['loss'] = loss
+        theta_dict['step'] = step
+        grad_dict['step'] = step
 
         # Save
         theta_target = os.path.join(target_dir, f'theta_{step}.npz')
