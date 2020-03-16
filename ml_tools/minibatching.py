@@ -154,7 +154,8 @@ def save_opt_state_callback(step: int, loss: float, theta: np.ndarray,
 def save_theta_and_grad_callback(step: int, loss: float, theta: np.ndarray,
                                  grad: np.ndarray, opt_state: Any,
                                  target_dir: str, summary: Any,
-                                 save_every: int):
+                                 save_every: int,
+                                 additional_vars: Dict[str, np.ndarray] = {}):
 
     os.makedirs(target_dir, exist_ok=True)
 
@@ -167,6 +168,9 @@ def save_theta_and_grad_callback(step: int, loss: float, theta: np.ndarray,
         theta_dict['loss'] = loss
         theta_dict['step'] = step
         grad_dict['step'] = step
+
+        # Add any additional variables passed in
+        theta_dict.update(additional_vars)
 
         # Save
         theta_target = os.path.join(target_dir, f'theta_{step}.npz')
