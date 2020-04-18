@@ -58,3 +58,11 @@ def solve_via_cholesky(k_chol, y):
     b = solve_triangular(k_chol.T, s)
 
     return b
+
+
+def generate_random_pos_def(n, jitter=10**-4):
+
+    elements = np.random.randn(n, n)
+    cov = elements @ elements.T + np.eye(n) * jitter
+
+    return cov

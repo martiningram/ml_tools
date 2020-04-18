@@ -116,3 +116,12 @@ def convert_sparse_matrix_to_sparse_tensor(X):
     coo = X.tocoo()
     indices = np.mat([coo.row, coo.col]).transpose()
     return tf.SparseTensor(indices, coo.data, coo.shape)
+
+
+def covar_to_corr_and_scales(covar):
+
+    scales = tf.sqrt(tf.linalg.diag_part(covar))
+    diag_inv_scales = tf.linalg.diag(1 / scales)
+    corr = (diag_inv_scales) @ covar @ (diag_inv_scales)
+
+    return corr, scales

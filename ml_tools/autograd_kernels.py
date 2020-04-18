@@ -1,18 +1,18 @@
 import autograd.numpy as np
 
 
-def ard_rbf_kernel_efficient(x1, x2, alpha, rho, jitter=1e-5):
+def ard_rbf_kernel_efficient(x1, x2, alpha, lengthscales, jitter=1e-5):
 
-    combined = compute_weighted_square_distances(x1, x2, rho)
+    combined = compute_weighted_square_distances(x1, x2, lengthscales)
     kernel = alpha**2 * np.exp(-0.5 * combined)
     kernel = add_jitter(kernel, jitter)
 
     return kernel
 
 
-def matern_kernel_32(x1, x2, alpha, rho, jitter=1e-5):
+def matern_kernel_32(x1, x2, alpha, lengthscales, jitter=1e-5):
 
-    r_sq = compute_weighted_square_distances(x1, x2, rho)
+    r_sq = compute_weighted_square_distances(x1, x2, lengthscales)
     r = np.sqrt(r_sq)
 
     kernel = alpha ** 2 * (1 + np.sqrt(3) * r) * np.exp(-np.sqrt(3) * r)
@@ -21,10 +21,10 @@ def matern_kernel_32(x1, x2, alpha, rho, jitter=1e-5):
     return kernel
 
 
-def compute_weighted_square_distances(x1, x2, rho):
+def compute_weighted_square_distances(x1, x2, lengthscales):
 
-    z1 = x1 / np.expand_dims(rho, axis=0)
-    z2 = x2 / np.expand_dims(rho, axis=0)
+    z1 = x1 / np.expand_dims(lengthscales, axis=0)
+    z2 = x2 / np.expand_dims(lengthscales, axis=0)
 
     # Matrix part
     cross_contrib = -2 * np.dot(z1, z2.T)

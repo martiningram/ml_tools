@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from adjustText import adjust_text
 
 
 def plot_with_error_bars(x, lower, mean, upper, ax=None, fill_alpha=0.5,
@@ -15,10 +16,12 @@ def plot_with_error_bars(x, lower, mean, upper, ax=None, fill_alpha=0.5,
     return ax
 
 
-def plot_with_error_bars_sd(x, mean, sd, ax=None, fill_alpha=0.5, **kwargs):
+def plot_with_error_bars_sd(x, mean, sd, ax=None, fill_alpha=0.5,
+                            fill_kwargs={}, **kwargs):
 
     return plot_with_error_bars(x, mean - 2 * sd, mean, mean + 2 * sd,
-                                ax=ax, fill_alpha=fill_alpha, **kwargs)
+                                ax=ax, fill_alpha=fill_alpha,
+                                fill_kwargs=fill_kwargs, **kwargs)
 
 
 def add_legend_on_right(ax):
@@ -73,3 +76,13 @@ def conditional_plot_1d_all(pred_fun, n_covs, n_points=100, other_feat_vals=0.,
         predictions[:, cur_cov] = predicted
 
     return x, predictions
+
+
+def plot_annotated_scatter(x, y, text, ax, text_alpha=0.5):
+
+    ax.scatter(x, y)
+    texts = [ax.text(x[i], y[i], '{}'.format(text[i]), ha='center',
+                     va='center', alpha=text_alpha) for i in range(len(x))]
+    adjust_text(texts, arrowprops=dict(arrowstyle='->', color='red'))
+
+    return ax
