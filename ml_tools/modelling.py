@@ -7,7 +7,7 @@ def remove_correlated_variables(covariate_df, corr_threshold=0.95):
     # correlation above the threshold are dropped.
     covariate_names = covariate_df.columns
 
-    to_keep = remove_correlated_variables_array(covariate_df.values.T)
+    to_keep = remove_correlated_variables_array(covariate_df.values)
 
     to_keep_names = np.array(covariate_names)[to_keep]
 

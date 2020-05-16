@@ -57,7 +57,8 @@ def gp_regression_marginal_likelihood(X, y, kernel_fun, obs_var,
 
 
 def map_smooth_data_1d(X, y, X_pred, kernel_fun=ard_rbf_kernel_efficient,
-                       mean_centre_y=True, prior_k=3, prior_theta=1/3):
+                       mean_centre_y=True, prior_k=3, prior_theta=1/3,
+                       jitter=1e-5):
 
     y_mean = y.mean()
 
@@ -70,7 +71,7 @@ def map_smooth_data_1d(X, y, X_pred, kernel_fun=ard_rbf_kernel_efficient,
         alpha, lscale, obs_var = theta**2
 
         cur_k = partial(kernel_fun, lengthscales=np.array([lscale]),
-                        alpha=alpha)
+                        alpha=alpha, jitter=jitter)
 
         marg_lik = gp_regression_marginal_likelihood(X, y, cur_k, obs_var)
 
