@@ -142,3 +142,13 @@ def pos_def_mat_from_tri_elts(elts, mat_size, jitter=1e-6):
     cov_mat = cov_mat + np.eye(mat_size) * jitter
 
     return cov_mat
+
+
+def vector_from_pos_def_mat(pos_def_mat, jitter=0):
+
+    # Subtract jitter
+    pos_def_mat -= np.eye(pos_def_mat.shape[0]) * jitter
+    L = np.linalg.cholesky(pos_def_mat)
+    elts = np.tril_indices_from(L)
+
+    return L[elts]

@@ -69,7 +69,7 @@ def conditional_plot_1d_all(pred_fun, n_covs, n_points=100, other_feat_vals=0.,
     for cur_cov in range(n_covs):
 
         base_vals = np.tile(other_feat_vals, (n_points, n_covs))
-        base_vals[:, cur_cov] = x
+        base_vals[:, cur_cov] = x.copy()
 
         predicted = pred_fun(base_vals)
 
@@ -78,9 +78,9 @@ def conditional_plot_1d_all(pred_fun, n_covs, n_points=100, other_feat_vals=0.,
     return x, predictions
 
 
-def plot_annotated_scatter(x, y, text, ax, text_alpha=0.5):
+def plot_annotated_scatter(x, y, text, ax, text_alpha=0.5, **point_kwargs):
 
-    ax.scatter(x, y)
+    ax.scatter(x, y, **point_kwargs)
     texts = [ax.text(x[i], y[i], '{}'.format(text[i]), ha='center',
                      va='center', alpha=text_alpha) for i in range(len(x))]
     adjust_text(texts, arrowprops=dict(arrowstyle='->', color='red'))

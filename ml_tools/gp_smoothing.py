@@ -4,7 +4,6 @@ from scipy.optimize import minimize
 from autograd import value_and_grad
 from functools import partial
 import autograd.scipy.linalg as spl
-from autograd.scipy.stats import gamma
 
 
 def solve_via_cholesky(k_chol, y):
@@ -57,14 +56,15 @@ def gp_regression_marginal_likelihood(X, y, kernel_fun, obs_var,
 
 
 def map_smooth_data_1d(X, y, X_pred, kernel_fun=ard_rbf_kernel_efficient,
-                       mean_centre_y=True, prior_k=3, prior_theta=1/3,
+                       standardise_y=True, prior_k=3, prior_theta=1/3,
                        jitter=1e-5):
 
     y_mean = y.mean()
+    y_std = y.std()
 
-    if mean_centre_y:
+    if standardise_y:
 
-        y = y - y_mean
+        y = (y - y_mean) / y_std
 
     def to_optimize(theta):
 
@@ -93,9 +93,11 @@ def map_smooth_data_1d(X, y, X_pred, kernel_fun=ard_rbf_kernel_efficient,
 
     # Predict
     pred_mean, pred_cov = fit_gp_regression(X, y, X_pred, final_k, obs_var)
+    pred_var = np.diag(pred_cov)
 
-    if mean_centre_y:
+    if standardise_y:
 
-        pred_mean += y_mean
+        pred_mean = (pred_mean * y_std) + y_mean
+        pred_var = pred_var * y_std**2
 
-    return pred_mean, np.diag(pred_cov)
+    return pred_mean, pred_var
