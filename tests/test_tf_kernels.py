@@ -2,7 +2,8 @@ import numpy as np
 import tensorflow as tf
 from ml_tools.tf_kernels import (
     ard_rbf_kernel, ard_rbf_kernel_old, compute_diag_weighted_square_distance,
-    compute_weighted_square_distances) # NOQA
+    compute_weighted_square_distances, additive_rbf_kernel) # NOQA
+import ml_tools.kernels as np_kernels
 
 jitter = 1e-5
 
@@ -56,3 +57,15 @@ def test_ard_kernel_diag_only():
     diag_full = tf.linalg.diag_part(full_result)
 
     assert np.allclose(diag_full.numpy(), diag_result.numpy())
+
+
+def test_additive_rbf_kernel_against_numpy():
+
+    x1, x2, rho, alpha = get_fake_data()
+
+    np_result = np_kernels.additive_rbf_kernel(
+        x1.numpy(), x2.numpy(), rho.numpy(), alpha.numpy(), jitter=jitter)
+
+    tf_result = additive_rbf_kernel(x1, x2, rho, alpha, jitter=jitter)
+
+    assert np.allclose(tf_result.numpy(), np_result)

@@ -234,3 +234,38 @@ def random_intercept_kernel(x1, x2, sd, jitter=DEFAULT_JITTER,
             float_version, tf.linalg.diag_part(float_version) + jitter)
 
         return float_version * sd**2
+
+
+def additive_rbf_kernel(x1, x2, lengthscales, alpha, jitter=DEFAULT_JITTER,
+                        diag_only=False):
+
+    n_c = x1.shape[1]
+
+    if diag_only:
+        min_size = min(x1.shape[0], x2.shape[0])
+        x1 = x1[:min_size]
+        x2 = x2[:min_size]
+        sq_dists = (x1 - x2)**2
+    else:
+        x1_exp = tf.expand_dims(x1, axis=1)
+        x2_exp = tf.expand_dims(x2, axis=0)
+        sq_dists = (x1_exp - x2_exp)**2
+
+    # Weight them
+    weighted_sq_dists = sq_dists / lengthscales**2
+
+    # Exponentiate them
+    exp_versions = tf.exp(-weighted_sq_dists / 2)
+
+    # Sum these
+    summed = tf.reduce_sum(exp_versions, axis=-1)
+
+    version = (alpha**2 / n_c) * summed
+
+    if diag_only:
+        version += jitter
+    else:
+        # Add a bit of jitter
+        version = add_jitter(version, jitter)
+
+    return version

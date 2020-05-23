@@ -191,6 +191,6 @@ def additive_rbf_kernel(x1, x2, lengthscales, alpha, jitter=1e-5,
         version += jitter
     else:
         # Add a bit of jitter
-        version[np.diag_indices_from(version)] += jitter
+        version = add_jitter(version, jitter)
 
     return version
