@@ -159,3 +159,38 @@ def rq_kernel(x1, x2, variance, lscales, alpha, jitter=1e-5):
     result = add_jitter(result, jitter)
 
     return result
+
+
+def additive_rbf_kernel(x1, x2, lengthscales, alpha, jitter=1e-5,
+                        diag_only=False):
+
+    n_c = x1.shape[1]
+
+    if diag_only:
+        min_size = min(x1.shape[0], x2.shape[0])
+        x1 = x1[:min_size]
+        x2 = x2[:min_size]
+        sq_dists = (x1 - x2)**2
+    else:
+        x1_exp = np.expand_dims(x1, axis=1)
+        x2_exp = np.expand_dims(x2, axis=0)
+        sq_dists = (x1_exp - x2_exp)**2
+
+    # Weight them
+    weighted_sq_dists = sq_dists / lengthscales**2
+
+    # Exponentiate them
+    exp_versions = np.exp(-weighted_sq_dists / 2)
+
+    # Sum these
+    summed = np.sum(exp_versions, axis=-1)
+
+    version = (alpha**2 / n_c) * summed
+
+    if diag_only:
+        version += jitter
+    else:
+        # Add a bit of jitter
+        version[np.diag_indices_from(version)] += jitter
+
+    return version
