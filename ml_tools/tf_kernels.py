@@ -236,6 +236,7 @@ def random_intercept_kernel(x1, x2, sd, jitter=DEFAULT_JITTER,
         return float_version * sd**2
 
 
+@tf.function
 def additive_rbf_kernel(x1, x2, lengthscales, alpha, jitter=DEFAULT_JITTER,
                         diag_only=False):
 
