@@ -3,12 +3,16 @@ import numpy as np
 EPS = 1e-12
 
 
-def rbf_kernel_1d(x1, x2, alpha, lengthscales):
+def rbf_kernel_1d(x1, x2, alpha, lengthscales, jitter=1e-5):
 
     differences = np.subtract.outer(x1, x2)
     sq_diff = differences**2
 
-    return alpha**2 * np.exp(-sq_diff / (2 * lengthscales**2))
+    result = alpha**2 * np.exp(-sq_diff / (2 * lengthscales**2))
+
+    result = add_jitter(result, jitter)
+
+    return result
 
 
 def ard_rbf_kernel(x1, x2, lengthscales, alpha, jitter=1e-5):

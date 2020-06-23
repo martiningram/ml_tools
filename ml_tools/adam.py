@@ -47,8 +47,6 @@ def adam_step(cur_state: AdamState,
     # Add 1 here so that we start at 1 rather than zero.
     step_size = step_size_fun(cur_state.t + 1)
 
-    print(step_size)
-
     m_t = beta_1 * cur_state.m + (1 - beta_1) * grad
     v_t = beta_2 * cur_state.v + (1 - beta_2) * grad**2
 
