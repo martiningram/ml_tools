@@ -155,12 +155,13 @@ def vector_from_pos_def_mat(pos_def_mat, jitter=0):
     return L[elts]
 
 
-def print_and_convert_decorator(fun):
+def convert_decorator(fun, verbose=True):
     def result(x):
 
         value, grad = fun(x)
 
-        print(value, np.linalg.norm(grad))
+        if verbose:
+            print(value, np.linalg.norm(grad))
 
         return (
             onp.array(value).astype(onp.float64),
