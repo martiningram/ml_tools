@@ -4,6 +4,7 @@ from typing import Callable, Tuple
 from scipy.optimize import minimize
 from jax.ops.scatter import index_update
 from jax.scipy.special import expit
+import numpy as onp
 
 
 # def hessian(fun, argnum=0):
@@ -39,8 +40,7 @@ def multivariate_normal_logpdf(x, cov):
     return total_prior
 
 
-def newton_optimize(start_f, fun, jac, hess, solve_fun=np.linalg.solve,
-                    tolerance=1e-5):
+def newton_optimize(start_f, fun, jac, hess, solve_fun=np.linalg.solve, tolerance=1e-5):
 
     # TODO: Consider adding a maxiter
     def body(val):
@@ -56,18 +56,18 @@ def newton_optimize(start_f, fun, jac, hess, solve_fun=np.linalg.solve,
 
         return (new_f, difference)
 
-    init_val = (start_f, 1.)
+    init_val = (start_f, 1.0)
 
     result = lax.while_loop(lambda data: data[1] > tolerance, body, init_val)
 
     return result[0]
 
 
-def fit_laplace_approximation(neg_log_posterior_fun: Callable[[np.ndarray],
-                                                              float],
-                              start_val: np.ndarray,
-                              optimization_method: str = 'Newton-CG') \
-        -> Tuple[np.ndarray, np.ndarray, bool]:
+def fit_laplace_approximation(
+    neg_log_posterior_fun: Callable[[np.ndarray], float],
+    start_val: np.ndarray,
+    optimization_method: str = "Newton-CG",
+) -> Tuple[np.ndarray, np.ndarray, bool]:
     """
     Fits a Laplace approximation to the posterior.
     Args:
@@ -85,8 +85,9 @@ def fit_laplace_approximation(neg_log_posterior_fun: Callable[[np.ndarray],
     jac = jacobian(neg_log_posterior_fun)
     hess = hessian(neg_log_posterior_fun)
 
-    result = minimize(neg_log_posterior_fun, start_val, jac=jac, hess=hess,
-                      method=optimization_method)
+    result = minimize(
+        neg_log_posterior_fun, start_val, jac=jac, hess=hess, method=optimization_method
+    )
 
     covariance_approx = np.linalg.inv(hess(result.x))
     mean_approx = result.x
@@ -152,3 +153,19 @@ def vector_from_pos_def_mat(pos_def_mat, jitter=0):
     elts = np.tril_indices_from(L)
 
     return L[elts]
+
+
+def convert_decorator(fun, verbose=True):
+    def result(x):
+
+        value, grad = fun(x)
+
+        if verbose:
+            print(value, np.linalg.norm(grad))
+
+        return (
+            onp.array(value).astype(onp.float64),
+            onp.array(grad).astype(onp.float64),
+        )
+
+    return result
