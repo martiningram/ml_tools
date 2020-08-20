@@ -1,6 +1,7 @@
 import numpy as np
 from ml_tools.kernels import ard_rbf_kernel_efficient
 from ml_tools.additive_kernels import newton_girard_combination
+from ml_tools.additive_kernels_jax import newton_girard_combination as newton_girard_jax
 
 
 def test_newton_girard_combination():
@@ -38,3 +39,26 @@ def test_newton_girard_combination():
     )
 
     assert np.allclose(e3, es[2])
+
+
+def test_newton_girard_combination_jax():
+
+    X = np.random.randn(20, 4)
+    N = 4
+
+    kerns = np.array(
+        [
+            ard_rbf_kernel_efficient(
+                cur_x.reshape(-1, 1),
+                cur_x.reshape(-1, 1),
+                1.0,
+                np.random.uniform(2.0, 4.0, size=(1,)),
+            )
+            for cur_x in X.T
+        ]
+    )
+
+    es = newton_girard_combination(kerns, N)
+    es_jax = newton_girard_jax(kerns, N)
+
+    assert np.allclose(es, es_jax)
