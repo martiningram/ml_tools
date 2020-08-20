@@ -1,29 +1,117 @@
-import jax.numpy as np
+import jax.numpy as jnp
+from jax import jit
+from functools import partial
+from jax.ops import index_add
+
+EPS = 1e-12
+DEFAULT_JITTER = 1e-5
 
 
-def ard_rbf_kernel_efficient(x1, x2, alpha, rho, jitter=1e-5):
+@jit
+def compute_weighted_square_distances(x1, x2, lengthscales):
 
-    z1 = x1 / np.expand_dims(rho, axis=0)
-    z2 = x2 / np.expand_dims(rho, axis=0)
+    z1 = x1 / jnp.expand_dims(lengthscales, axis=0)
+    z2 = x2 / jnp.expand_dims(lengthscales, axis=0)
 
-    # Matrix part
-    cross_contrib = -2 * np.matmul(z1, z2.T)
+    cross_contrib = -2 * z1 @ z2.T
 
-    # Other bits
-    z1_sq = np.sum(z1**2, axis=1)
-    z2_sq = np.sum(z2**2, axis=1)
+    z1_sq = jnp.sum(z1 ** 2, axis=1)
+    z2_sq = jnp.sum(z2 ** 2, axis=1)
 
-    # Sum it all up
-    combined = (np.expand_dims(z1_sq, axis=1) + cross_contrib +
-                np.expand_dims(z2_sq, axis=0))
+    combined = (
+        jnp.expand_dims(z1_sq, axis=1) + cross_contrib + jnp.expand_dims(z2_sq, axis=0)
+    )
 
-    kernel = alpha**2 * np.exp(-0.5 * combined)
+    # This seems required as some elements can become smaller than zero.
+    # Would be nice to fix this another way & make sure all OK.
+    return jnp.maximum(combined, 0.0)
 
-    # Add the jitter
-    # diag_indices = np.diag_indices(np.min(kernel.shape[:2]))
-    to_add = np.eye(kernel.shape[0], kernel.shape[1])
-    to_add = to_add * jitter
 
-    kernel = kernel + to_add
+@jit
+def compute_diag_weighted_square_distance(x1, x2, lengthscales):
+
+    z1 = x1 / jnp.expand_dims(lengthscales, axis=0)
+    z2 = x2 / jnp.expand_dims(lengthscales, axis=0)
+
+    max_len = min(int(z1.shape[0]), int(z2.shape[0]))
+
+    z1 = z1[:max_len]
+    z2 = z2[:max_len]
+
+    cross_terms = -2 * jnp.sum(z1 * z2, axis=1)
+    norms = jnp.sum(z1 ** 2, axis=1) + jnp.sum(z2 ** 2, axis=1)
+
+    return jnp.maximum(norms + cross_terms, 0.0)
+
+
+@partial(jit, static_argnums=4)
+def ard_rbf_kernel(x1, x2, lengthscales, alpha, diag_only=False, jitter=DEFAULT_JITTER):
+
+    if diag_only:
+
+        r_sq = compute_diag_weighted_square_distance(x1, x2, lengthscales)
+
+    else:
+
+        r_sq = compute_weighted_square_distances(x1, x2, lengthscales)
+
+    kernel = alpha ** 2 * jnp.exp(-0.5 * r_sq)
+
+    kernel = add_jitter(kernel, jitter, diag_only)
 
     return kernel
+
+
+@partial(jit, static_argnums=4)
+def matern_kernel_32(
+    x1, x2, lengthscales, alpha, diag_only=False, jitter=DEFAULT_JITTER
+):
+
+    if diag_only:
+
+        r_sq = compute_diag_weighted_square_distance(x1, x2, lengthscales)
+
+    else:
+
+        r_sq = compute_weighted_square_distances(x1, x2, lengthscales)
+
+    r = jnp.sqrt(r_sq + EPS)
+
+    kernel = alpha ** 2 * (1 + jnp.sqrt(3.0) * r) * jnp.exp(-jnp.sqrt(3.0) * r)
+    kernel = add_jitter(kernel, jitter, diag_only)
+
+    return kernel
+
+
+@partial(jit, static_argnums=2)
+def add_jitter(kern, jitter=DEFAULT_JITTER, diag_only=False):
+
+    if diag_only:
+
+        kern = kern + jitter
+
+    else:
+
+        kern = index_add(
+            kern, jnp.diag_indices(min(kern.shape[0], kern.shape[1])), jitter
+        )
+
+    return kern
+
+
+@partial(jit, static_argnums=3)
+def bias_kernel(x1, x2, sd, diag_only=False, jitter=DEFAULT_JITTER):
+
+    output_rows = int(x1.shape[0])
+    output_cols = int(x2.shape[0])
+
+    shape = jnp.stack([output_rows, output_cols])
+
+    if diag_only:
+        kern = jnp.repeat(sd ** 2, (min(output_cols, output_rows),)) + jitter
+    else:
+        # kern = jnp.tile(sd ** 2, shape)
+        kern = jnp.ones(shape) * sd ** 2
+        kern = add_jitter(kern, jitter, diag_only)
+
+    return kern

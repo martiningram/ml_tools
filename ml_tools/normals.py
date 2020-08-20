@@ -7,7 +7,6 @@ from scipy.special import expit, logsumexp
 
 
 class MultivariateNormal(object):
-
     def __init__(self, m, v_inv):
         """
         Initialises a Multivariate normal.
@@ -17,7 +16,7 @@ class MultivariateNormal(object):
         """
 
         # Do some size checking
-        assert(v_inv.shape[0] == m.shape[0] and v_inv.shape[1] == m.shape[0])
+        assert v_inv.shape[0] == m.shape[0] and v_inv.shape[1] == m.shape[0]
 
         self.m = m
         self.v_inv = v_inv
@@ -72,8 +71,9 @@ class MultivariateNormal(object):
 
     def __str__(self):
 
-        return ('Normal distribution with mean {} and precision'
-                ' {}.'.format(self.m, self.v_inv))
+        return "Normal distribution with mean {} and precision" " {}.".format(
+            self.m, self.v_inv
+        )
 
     def get_marginal_var(self):
         """
@@ -104,12 +104,12 @@ class MultivariateNormal(object):
 
             results.append(values)
 
-        return pd.DataFrame(results, columns=[str(np.round(x, 2)) for x in
-                                              np.array(quantiles)*100])
+        return pd.DataFrame(
+            results, columns=[str(np.round(x, 2)) for x in np.array(quantiles) * 100]
+        )
 
 
 class DiagonalNormal(object):
-
     def __init__(self, m, v):
         """Instantiates a new diagonal multivariate normal.
         Args:
@@ -117,27 +117,28 @@ class DiagonalNormal(object):
             v (np.array): The vector of variances.
         """
 
-        assert(m.shape[0] == v.shape[0])
-        assert(np.prod(v.shape) == m.shape[0])
+        assert m.shape[0] == v.shape[0]
+        assert np.prod(v.shape) == m.shape[0]
 
         self.m = m
         self.v = v
 
     def multiply(self, m2, v2):
         m1, v1 = self.m, self.v
-        new_v = 1. / (1. / v1 + 1. / v2)
+        new_v = 1.0 / (1.0 / v1 + 1.0 / v2)
         new_m = new_v * (m1 / v1 + m2 / v2)
         return DiagonalNormal(new_m, new_v)
 
     def divide(self, m2, v2):
         m1, v1 = self.m, self.v
-        new_v = 1. / (1. / v1 - 1. / v2)
+        new_v = 1.0 / (1.0 / v1 - 1.0 / v2)
         new_m = new_v * (m1 / v1 - m2 / v2)
         return DiagonalNormal(new_m, new_v)
 
     def __str__(self):
-        return 'Normal distribution with mean {} and variance {}.'.format(
-            self.m, self.v)
+        return "Normal distribution with mean {} and variance {}.".format(
+            self.m, self.v
+        )
 
     def plot(self, ax=None):
 
@@ -165,7 +166,7 @@ def covar_to_corr(covar_mat):
 
     marg_var = np.diag(covar_mat)
     marg_sd = np.sqrt(marg_var)
-    inv_marg = np.diag(1. / marg_sd)
+    inv_marg = np.diag(1.0 / marg_sd)
 
     return np.dot(np.dot(inv_marg, covar_mat), inv_marg)
 
@@ -214,16 +215,16 @@ def conjugate_update_univariate(prior_mu, prior_var, lik_mu, lik_var):
         theta.
     """
 
-    prior_prec = 1. / prior_var
-    lik_prec = 1. / lik_var
+    prior_prec = 1.0 / prior_var
+    lik_prec = 1.0 / lik_var
 
-    new_prec = (prior_prec + lik_prec)
+    new_prec = prior_prec + lik_prec
 
     # TODO: Check this!
     bracket_term = prior_mu * prior_prec + lik_mu * lik_prec
 
-    new_mean = (1. / new_prec) * bracket_term
-    new_var = 1. / new_prec
+    new_mean = (1.0 / new_prec) * bracket_term
+    new_var = 1.0 / new_prec
 
     return new_mean, new_var
 
@@ -237,8 +238,9 @@ def linear_regression_online_update(m_km1, P_km1, H, m_obs, var_obs):
     # Returns mean, cov, and _negative_ log marg lik.
 
     # We need to work with matrices here or the maths will be wrong
-    assert all([len(x.shape) == 2 for x in [m_km1, H]]), \
-        'm_km1 and H must have two dimensions each!'
+    assert all(
+        [len(x.shape) == 2 for x in [m_km1, H]]
+    ), "m_km1 and H must have two dimensions each!"
 
     v_k = m_obs - H @ m_km1
 
@@ -312,33 +314,34 @@ def mvn_kl(mu_0, sigma_0, mu_1, sigma_1):
 
 
 def calculate_log_joint_bernoulli_likelihood(
-        latent_prob_samples: np.ndarray, outcomes: np.ndarray,
-        link: str = 'probit') -> float:
+    latent_prob_samples: np.ndarray, outcomes: np.ndarray, link: str = "probit"
+) -> float:
     # latent_prob_samples is n_samples x n_outcomes array of probabilities on
     # the probit scale
     # outcomes is (n_outcomes,) array of binary outcomes (1 and 0)
-    assert(latent_prob_samples.shape[1] == outcomes.shape[0])
+    assert latent_prob_samples.shape[1] == outcomes.shape[0]
 
     # Make sure broadcasting is unambiguous
-    assert(latent_prob_samples.shape[0] != outcomes.shape[0])
+    assert latent_prob_samples.shape[0] != outcomes.shape[0]
 
     n_samples = latent_prob_samples.shape[0]
 
     # Get log likelihood for each draw
 
-    assert link in ['logit', 'probit'], \
-        'Only logit and probit links supported!'
+    assert link in ["logit", "probit"], "Only logit and probit links supported!"
 
-    if link == 'probit':
+    if link == "probit":
         individual_liks = np.sum(
             outcomes * norm.logcdf(latent_prob_samples)
             + (1 - outcomes) * norm.logcdf(-latent_prob_samples),
-            axis=1)
+            axis=1,
+        )
     else:
         individual_liks = np.sum(
             outcomes * np.log(expit(latent_prob_samples))
             + (1 - outcomes) * np.log(1 - expit(latent_prob_samples)),
-            axis=1)
+            axis=1,
+        )
 
     # Compute the Monte Carlo expectation
     return logsumexp(individual_liks - np.log(n_samples))
@@ -358,7 +361,7 @@ def normal_cdf_integral(mu, sigma, log=False):
 
     fun = norm.logcdf if log else norm.cdf
 
-    return fun(-b / np.sqrt(a**2 + 1))
+    return fun(-b / np.sqrt(a ** 2 + 1))
 
 
 def generate_random_pos_def(n):
@@ -384,8 +387,9 @@ def moments_of_linear_combination_rvs(means_1, cov_1, means_2, cov_2):
     return mean_of_sum, variance_of_sum
 
 
-def moments_of_linear_combination_rvs_batch(means_1, cov_1, means_2, cov_2,
-                                            einsum_fun=np.einsum):
+def moments_of_linear_combination_rvs_batch(
+    means_1, cov_1, means_2, cov_2, einsum_fun=np.einsum
+):
     # Same as `moments_of_linear_combination_rvs`, but the random variables
     # now come in (potentially different-sized) batches:
     # means_1 is n x n_l
@@ -395,18 +399,19 @@ def moments_of_linear_combination_rvs_batch(means_1, cov_1, means_2, cov_2,
     # Produces the means and variances of linear combinations, both of shape
     # (n x n_out).
 
-    pred_means = einsum_fun('ij,kj->ik', means_1, means_2)
-    term_1 = einsum_fun('ijk,ljk->il', cov_1, cov_2)
-    term_2 = einsum_fun('ijk,lj,lk->il', cov_1, means_2, means_2)
-    term_3 = einsum_fun('ijk,lj,lk->li', cov_2, means_1, means_1)
+    pred_means = einsum_fun("ij,kj->ik", means_1, means_2)
+    term_1 = einsum_fun("ijk,ljk->il", cov_1, cov_2)
+    term_2 = einsum_fun("ijk,lj,lk->il", cov_1, means_2, means_2)
+    term_3 = einsum_fun("ijk,lj,lk->li", cov_2, means_1, means_1)
 
     pred_vars = term_1 + term_2 + term_3
 
     return pred_means, pred_vars
 
 
-def moments_of_linear_combination_rvs_selected(means_1, cov_1, means_2, cov_2,
-                                               einsum_fun=np.einsum):
+def moments_of_linear_combination_rvs_selected(
+    means_1, cov_1, means_2, cov_2, einsum_fun=np.einsum
+):
     # means_1 is n x n_l
     # means_2 is n x n_l
     # cov_1 is (n x n_l x n_l)
@@ -414,10 +419,10 @@ def moments_of_linear_combination_rvs_selected(means_1, cov_1, means_2, cov_2,
     # In this version, the output is [n,] for the means and variances resulting
     # from computing the linear combinations of these _matched_ elements.
 
-    pred_means = einsum_fun('ij,ij->i', means_1, means_2)
-    term_1 = einsum_fun('ijk,ijk->i', cov_1, cov_2)
-    term_2 = einsum_fun('ijk,ij,ik->i', cov_1, means_2, means_2)
-    term_3 = einsum_fun('ijk,ij,ik->i', cov_2, means_1, means_1)
+    pred_means = einsum_fun("ij,ij->i", means_1, means_2)
+    term_1 = einsum_fun("ijk,ijk->i", cov_1, cov_2)
+    term_2 = einsum_fun("ijk,ij,ik->i", cov_1, means_2, means_2)
+    term_3 = einsum_fun("ijk,ij,ik->i", cov_2, means_1, means_1)
 
     pred_vars = term_1 + term_2 + term_3
 
@@ -425,7 +430,8 @@ def moments_of_linear_combination_rvs_selected(means_1, cov_1, means_2, cov_2,
 
 
 def moments_of_linear_combination_rvs_selected_independent(
-        means_1, var_1, means_2, var_2, sum_fun=np.sum):
+    means_1, var_1, means_2, var_2, sum_fun=np.sum
+):
     # Same as `moments_of_linear_combination_rvs_selected`, but assumes that
     # the elements of both vectors are uncorrelated.
     # means_1 is n x n_l
@@ -437,8 +443,21 @@ def moments_of_linear_combination_rvs_selected_independent(
 
     pred_means = sum_fun(means_1 * means_2, axis=1)
     term_1 = sum_fun(var_1 * var_2, axis=1)
-    term_2 = sum_fun(var_2 * means_1**2, axis=1)
-    term_3 = sum_fun(var_1 * means_2**2, axis=1)
+    term_2 = sum_fun(var_2 * means_1 ** 2, axis=1)
+    term_3 = sum_fun(var_1 * means_2 ** 2, axis=1)
     pred_vars = term_1 + term_2 + term_3
+
+    return pred_means, pred_vars
+
+
+def moments_of_linear_combination_rvs_independent(means_1, var_1, means_2, var_2):
+    # Same as moments_of_linear_combination_rvs_batch but assuming independence
+    # means_1 is n x n_l
+    # means_2 is n_l x n_out
+    # var_1 is (n x n_l)
+    # var_2 is (n_l x n_out)
+
+    pred_means = means_1 @ means_2
+    pred_vars = means_1 ** 2 @ var_2 + var_1 @ means_2 ** 2 + var_1 @ var_2
 
     return pred_means, pred_vars

@@ -5,6 +5,8 @@ from scipy.optimize import minimize
 from jax.ops.scatter import index_update
 from jax.scipy.special import expit
 import numpy as onp
+from jax import jit
+from functools import partial
 
 
 # def hessian(fun, argnum=0):
@@ -95,10 +97,14 @@ def fit_laplace_approximation(
     return mean_approx, covariance_approx, result.success
 
 
+# TODO: Is there some way to avoid the static argnum?
+
+
+@partial(jit, static_argnums=1)
 def lo_tri_from_elements(elements, n):
 
     L = np.zeros((n, n))
-    indices = np.tril_indices(L.shape[0])
+    indices = np.tril_indices(n)
     L = index_update(L, indices, elements)
 
     return L
@@ -135,6 +141,7 @@ def logistic_normal_integral_approx(mu, var):
     return expit(mu / gamma)
 
 
+@partial(jit, static_argnums=1)
 def pos_def_mat_from_tri_elts(elts, mat_size, jitter=1e-6):
 
     cov_mat = lo_tri_from_elements(elts, mat_size)
@@ -169,3 +176,10 @@ def convert_decorator(fun, verbose=True):
         )
 
     return result
+
+
+@jit
+def diag_elts_of_triple_matmul(A, B, C):
+    """Returns the diagonal elements of the matrix multiplication A B C."""
+
+    return np.einsum("ik,kl,li->i", A, B, C)

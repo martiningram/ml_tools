@@ -25,10 +25,16 @@ def test_against_numpy_ml():
         # Make up a bogus gradient
         cur_grad = np.random.randn(n_params)
 
-        theta_cust, adam_state = adam_step(adam_state, theta_cust, cur_grad,
-                                           step_size=lr, beta_1=decay1,
-                                           beta_2=decay2, eps=eps)
+        theta_cust, adam_state = adam_step(
+            adam_state,
+            theta_cust,
+            cur_grad,
+            step_size_fun=lambda _: lr,
+            beta_1=decay1,
+            beta_2=decay2,
+            eps=eps,
+        )
 
-        theta_lib = adam_np.update(theta_lib, cur_grad, 'bla')
+        theta_lib = adam_np.update(theta_lib, cur_grad, "bla")
 
     assert np.allclose(theta_lib, theta_cust)
