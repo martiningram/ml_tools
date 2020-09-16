@@ -2,6 +2,8 @@ import jax.numpy as jnp
 from jax import jit
 from functools import partial
 from jax.ops import index_add
+from .additive_kernels_jax import newton_girard_combination
+from jax import vmap
 
 EPS = 1e-12
 DEFAULT_JITTER = 1e-5
@@ -115,3 +117,36 @@ def bias_kernel(x1, x2, sd, diag_only=False, jitter=DEFAULT_JITTER):
         kern = add_jitter(kern, jitter, diag_only)
 
     return kern
+
+
+@partial(jit, static_argnums=(5, 6))
+def additive_kernel(
+    x1,
+    x2,
+    lengthscales,
+    additive_alphas,
+    kernel_alphas,
+    base_kernel_fun,
+    diag_only,
+    jitter=DEFAULT_JITTER,
+):
+
+    N = additive_alphas.shape[0]
+
+    # TODO: Could make more general to support other kernels
+    to_vmap = lambda x1, x2, lengthscale, alpha: base_kernel_fun(
+        x1.reshape(-1, 1),
+        x2.reshape(-1, 1),
+        lengthscale.reshape(-1,),
+        alpha,
+        diag_only,
+        jitter,
+    )
+
+    map_res = vmap(to_vmap)(x1.T, x2.T, lengthscales, kernel_alphas)
+
+    girard_res = newton_girard_combination(map_res, N)
+
+    kernel_res = jnp.tensordot(additive_alphas, girard_res, axes=(0, 0))
+
+    return kernel_res

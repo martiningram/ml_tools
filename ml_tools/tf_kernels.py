@@ -2,8 +2,8 @@ import numpy as np
 import tensorflow as tf
 
 
-EPS = tf.constant(1e-12)
-DEFAULT_JITTER = tf.constant(1e-5)
+EPS = tf.constant(1e-12, dtype=tf.float32)
+DEFAULT_JITTER = tf.constant(1e-5, dtype=tf.float32)
 
 
 @tf.function
@@ -78,7 +78,7 @@ def matern_kernel_32(
 
     r = tf.sqrt(r_sq + EPS)
 
-    kernel = alpha ** 2 * (1 + np.sqrt(3.0) * r) * tf.exp(-np.sqrt(3.0) * r)
+    kernel = alpha ** 2 * (1 + tf.sqrt(3.0) * r) * tf.exp(-tf.sqrt(3.0) * r)
     kernel = add_jitter(kernel, jitter, diag_only)
 
     return kernel

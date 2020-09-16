@@ -3,8 +3,9 @@ import matplotlib.pyplot as plt
 from adjustText import adjust_text
 
 
-def plot_with_error_bars(x, lower, mean, upper, ax=None, fill_alpha=0.5,
-                         fill_kwargs={}, **plot_kwargs):
+def plot_with_error_bars(
+    x, lower, mean, upper, ax=None, fill_alpha=0.5, fill_kwargs={}, **plot_kwargs
+):
 
     if ax is None:
         _, ax = plt.subplots(1, 1)
@@ -16,12 +17,20 @@ def plot_with_error_bars(x, lower, mean, upper, ax=None, fill_alpha=0.5,
     return ax
 
 
-def plot_with_error_bars_sd(x, mean, sd, ax=None, fill_alpha=0.5,
-                            fill_kwargs={}, **kwargs):
+def plot_with_error_bars_sd(
+    x, mean, sd, ax=None, fill_alpha=0.5, fill_kwargs={}, **kwargs
+):
 
-    return plot_with_error_bars(x, mean - 2 * sd, mean, mean + 2 * sd,
-                                ax=ax, fill_alpha=fill_alpha,
-                                fill_kwargs=fill_kwargs, **kwargs)
+    return plot_with_error_bars(
+        x,
+        mean - 2 * sd,
+        mean,
+        mean + 2 * sd,
+        ax=ax,
+        fill_alpha=fill_alpha,
+        fill_kwargs=fill_kwargs,
+        **kwargs
+    )
 
 
 def add_legend_on_right(ax):
@@ -31,13 +40,18 @@ def add_legend_on_right(ax):
     ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
 
     # Put a legend to the right of the current axis
-    ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-
-    return ax
+    return ax.legend(loc="center left", bbox_to_anchor=(1, 0.5))
 
 
-def conditional_plot_2d(pred_fun, dims_to_vary, n_covs, n_points=100,
-                        other_feat_vals=0., lower_lim=-2, upper_lim=2):
+def conditional_plot_2d(
+    pred_fun,
+    dims_to_vary,
+    n_covs,
+    n_points=100,
+    other_feat_vals=0.0,
+    lower_lim=-2,
+    upper_lim=2,
+):
 
     # Returns arrays for plotting contour plots / surface plots.
     # Predicts by varying x and y between lower_lim and upper_lim while
@@ -56,8 +70,9 @@ def conditional_plot_2d(pred_fun, dims_to_vary, n_covs, n_points=100,
     return grid[0], grid[1], reshaped
 
 
-def conditional_plot_1d_all(pred_fun, n_covs, n_points=100, other_feat_vals=0.,
-                            lower_lim=-2, upper_lim=2):
+def conditional_plot_1d_all(
+    pred_fun, n_covs, n_points=100, other_feat_vals=0.0, lower_lim=-2, upper_lim=2
+):
 
     # Returns arrays for plotting contour plots / surface plots.
     # Predicts by varying x and y between lower_lim and upper_lim while
@@ -81,8 +96,12 @@ def conditional_plot_1d_all(pred_fun, n_covs, n_points=100, other_feat_vals=0.,
 def plot_annotated_scatter(x, y, text, ax, text_alpha=0.5, **point_kwargs):
 
     ax.scatter(x, y, **point_kwargs)
-    texts = [ax.text(x[i], y[i], '{}'.format(text[i]), ha='center',
-                     va='center', alpha=text_alpha) for i in range(len(x))]
-    adjust_text(texts, arrowprops=dict(arrowstyle='->', color='red'))
+    texts = [
+        ax.text(
+            x[i], y[i], "{}".format(text[i]), ha="center", va="center", alpha=text_alpha
+        )
+        for i in range(len(x))
+    ]
+    adjust_text(texts, arrowprops=dict(arrowstyle="->", color="red"))
 
     return ax
