@@ -104,16 +104,16 @@ def add_jitter(kern, jitter=DEFAULT_JITTER, diag_only=False):
 @partial(jit, static_argnums=3)
 def bias_kernel(x1, x2, sd, diag_only=False, jitter=DEFAULT_JITTER):
 
-    output_rows = int(x1.shape[0])
-    output_cols = int(x2.shape[0])
+    output_rows = x1.shape[0]
+    output_cols = x2.shape[0]
 
-    shape = jnp.stack([output_rows, output_cols])
+    # shape = jnp.stack([output_rows, output_cols])
 
     if diag_only:
         kern = jnp.repeat(sd ** 2, (min(output_cols, output_rows),)) + jitter
     else:
         # kern = jnp.tile(sd ** 2, shape)
-        kern = jnp.ones(shape) * sd ** 2
+        kern = jnp.ones((output_rows, output_cols)) * sd ** 2
         kern = add_jitter(kern, jitter, diag_only)
 
     return kern

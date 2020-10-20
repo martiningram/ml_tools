@@ -7,6 +7,7 @@ from jax.scipy.special import expit
 import numpy as onp
 from jax import jit
 from functools import partial
+from jax.scipy.special import gammaln, xlog1py, xlogy
 
 
 # def hessian(fun, argnum=0):
@@ -183,3 +184,17 @@ def diag_elts_of_triple_matmul(A, B, C):
     """Returns the diagonal elements of the matrix multiplication A B C."""
 
     return np.einsum("ik,kl,li->i", A, B, C)
+
+
+def binomial_lpmf(k, n, p):
+    # Credit to https://github.com/pyro-ppl/numpyro/blob/master/numpyro/distributions/discrete.py
+    log_factorial_n = gammaln(n + 1)
+    log_factorial_k = gammaln(k + 1)
+    log_factorial_nmk = gammaln(n - k + 1)
+    return (
+        log_factorial_n
+        - log_factorial_k
+        - log_factorial_nmk
+        + xlogy(k, p)
+        + xlog1py(n - k, -p)
+    )
