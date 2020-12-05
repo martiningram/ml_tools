@@ -105,3 +105,8 @@ def plot_annotated_scatter(x, y, text, ax, text_alpha=0.5, **point_kwargs):
     adjust_text(texts, arrowprops=dict(arrowstyle="->", color="red"))
 
     return ax
+
+
+def add_equality_line(ax):
+
+    return ax.plot([0, 1], [0, 1], transform=ax.transAxes)

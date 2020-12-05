@@ -4,7 +4,7 @@ from functools import partial
 from collections import namedtuple, OrderedDict
 
 
-array_info = namedtuple('array_info', 'shape')
+array_info = namedtuple("array_info", "shape")
 
 
 def extract_info(array):
@@ -16,9 +16,7 @@ def flatten_and_summarise(**input_arrays):
 
     input_arrays = OrderedDict(input_arrays)
 
-    summaries = OrderedDict(
-        {x: extract_info(y) for x, y in input_arrays.items()}
-    )
+    summaries = OrderedDict({x: extract_info(y) for x, y in input_arrays.items()})
 
     flattened = np.concatenate([y.reshape(-1) for y in input_arrays.values()])
 
@@ -30,12 +28,9 @@ def flatten_and_summarise_tf(**input_arrays):
 
     input_arrays = OrderedDict(input_arrays)
 
-    summaries = OrderedDict(
-        {x: extract_info(y) for x, y in input_arrays.items()}
-    )
+    summaries = OrderedDict({x: extract_info(y) for x, y in input_arrays.items()})
 
-    flattened = tf.concat([tf.reshape(y, (-1,)) for y in
-                           input_arrays.values()], axis=0)
+    flattened = tf.concat([tf.reshape(y, (-1,)) for y in input_arrays.values()], axis=0)
 
     return flattened, summaries
 
@@ -52,9 +47,7 @@ def reconstruct(flat_array, summaries, reshape_fun):
     # Cast to int is there to have this definitely work with TF
     cur_elements = int(np.prod(cur_summary.shape))
 
-    cur_result = {
-        cur_name: reshape_fun(flat_array[:cur_elements], cur_summary.shape)
-    }
+    cur_result = {cur_name: reshape_fun(flat_array[:cur_elements], cur_summary.shape)}
 
     remaining_summaries = OrderedDict(
         {x: y for x, y in summaries.items() if x != cur_name}
@@ -62,8 +55,9 @@ def reconstruct(flat_array, summaries, reshape_fun):
 
     return {
         **cur_result,
-        **reconstruct(flat_array[cur_elements:], remaining_summaries,
-                      reshape_fun=reshape_fun)
+        **reconstruct(
+            flat_array[cur_elements:], remaining_summaries, reshape_fun=reshape_fun
+        ),
     }
 
 

@@ -461,3 +461,16 @@ def moments_of_linear_combination_rvs_independent(means_1, var_1, means_2, var_2
     pred_vars = means_1 ** 2 @ var_2 + var_1 @ means_2 ** 2 + var_1 @ var_2
 
     return pred_means, pred_vars
+
+
+def normal_approx_to_binomial(successes, trials):
+    """
+    Approximates a binomial distribution with a normal distribution. The mean
+    is calculated as the ratio of successes to trials; the variance from the
+    estimated means.
+    """
+
+    means = successes / trials
+    vars = means * (1 - means) / trials
+
+    return means, vars

@@ -16,6 +16,9 @@ def find_map_estimate(
     ] = lambda x: x,
     prior_fun: Callable[[Dict[str, np.ndarray]], float] = lambda _: 0.0,
     verbose: bool = False,
+    callback_fn: Callable[
+        [Dict[str, np.ndarray], float, float], None
+    ] = lambda theta, likelihood, prior: None,
 ) -> Tuple[Dict[str, np.ndarray], Any]:
     """
     Computes the map estimate using JAX + scipy.optimize.minimize [L-BFGS-B].
@@ -32,6 +35,11 @@ def find_map_estimate(
         prior_fun: A function taking in the parameter settings after
             transformation and returning the value of their prior. Defaults to
             returning zero [i.e. maximum likelihood].
+        verbose: If True, prints the current value of the [negative] objective
+            as well as the current norm of the gradient used for optimising.
+        callback_fn: An optional function to call at every step of the
+            optimisation, taking in the current parameters as well as the
+            current likelihood and prior and not returning anything.
     
     Returns:
     A Tuple whose first element is the [transformed] optimal set of values, and
@@ -47,6 +55,8 @@ def find_map_estimate(
         theta = transform_function(theta)
         log_lik = likelihood_fun(theta)
         prior = prior_fun(theta)
+
+        callback_fn(theta, log_lik, prior)
 
         return -log_lik - prior
 

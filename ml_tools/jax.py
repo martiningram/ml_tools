@@ -2,7 +2,7 @@ import jax.numpy as np
 from jax import lax, hessian, jacobian
 from typing import Callable, Tuple
 from scipy.optimize import minimize
-from jax.ops.scatter import index_update
+from jax.ops import index_update
 from jax.scipy.special import expit
 import numpy as onp
 from jax import jit
@@ -163,13 +163,26 @@ def vector_from_pos_def_mat(pos_def_mat, jitter=0):
     return L[elts]
 
 
-def convert_decorator(fun, verbose=True):
+def print_decorator(fun, verbose=True):
     def result(x):
 
         value, grad = fun(x)
 
         if verbose:
             print(value, np.linalg.norm(grad))
+
+        return value, grad
+
+    return result
+
+
+def convert_decorator(fun, verbose=True):
+    def result(x):
+
+        if verbose:
+            fun = print_decorator(fun, verbose)
+
+        value, grad = fun(x)
 
         return (
             onp.array(value).astype(onp.float64),
@@ -198,3 +211,41 @@ def binomial_lpmf(k, n, p):
         + xlogy(k, p)
         + xlog1py(n - k, -p)
     )
+
+
+def linear_regression_online_update(m_km1, P_km1, H, m_obs, var_obs):
+    # m_km1: Prior mean
+    # P_km1: Prior cov
+    # H: Link from latent to observed
+    # m_obs: Mean of observation
+    # var_obs: Variance of observation
+    # Returns mean, cov, and _negative_ log marg lik.
+
+    # We need to work with matrices here or the maths will be wrong
+    assert all(
+        [len(x.shape) == 2 for x in [m_km1, H]]
+    ), "m_km1 and H must have two dimensions each!"
+
+    v_k = m_obs - H @ m_km1
+
+    S_k = H @ P_km1 @ H.T + var_obs
+    K_k = P_km1 @ H.T * (1 / S_k)
+    m_k = m_km1 + K_k * v_k
+    P_k = P_km1 - (K_k * S_k) @ K_k.T
+
+    # Calculate the log marginal likelihood here too
+    sign, logdet = np.linalg.slogdet(2 * np.pi * S_k)
+    logdet = sign * logdet
+
+    # Second part
+    quadratic_term = 0.5 * v_k.T @ np.linalg.solve(S_k, v_k)
+    energy_contrib = 0.5 * logdet + quadratic_term
+
+    return m_k, P_k, np.squeeze(energy_contrib)
+
+
+def num_mat_elts_from_num_tri(num_triangular_elts):
+
+    sqrt_term = np.sqrt(8 * num_triangular_elts + 1)
+
+    return ((sqrt_term - 1) / 2).astype(int)

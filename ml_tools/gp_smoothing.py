@@ -1,9 +1,10 @@
-import autograd.numpy as np
-from .autograd_kernels import ard_rbf_kernel_efficient
+import jax.numpy as jnp
+from .jax_kernels import ard_rbf_kernel
 from scipy.optimize import minimize
-from autograd import value_and_grad
+from jax import value_and_grad
 from functools import partial
-import autograd.scipy.linalg as spl
+import jax.scipy.linalg as spl
+from jax import jit
 
 
 def solve_via_cholesky(k_chol, y):
@@ -28,36 +29,43 @@ def fit_gp_regression(X, y, X_predict, kernel_fun, obs_var):
 
     k_xstar_x = kernel_fun(X_predict, X)
     k_xx = kernel_fun(X, X)
-    obs_mat = np.diag(obs_var * np.ones(X.shape[0]))
+    obs_mat = jnp.diag(obs_var * jnp.ones(X.shape[0]))
     k_xstar_xstar = kernel_fun(X_predict, X_predict)
 
-    k_chol = np.linalg.cholesky(k_xx + obs_mat)
+    k_chol = jnp.linalg.cholesky(k_xx + obs_mat)
 
     pred_mean = k_xstar_x @ solve_via_cholesky(k_chol, y)
-    pred_cov = k_xstar_xstar - k_xstar_x @ solve_via_cholesky(
-        k_chol, k_xstar_x.T)
+    pred_cov = k_xstar_xstar - k_xstar_x @ solve_via_cholesky(k_chol, k_xstar_x.T)
 
     return pred_mean, pred_cov
 
 
-def gp_regression_marginal_likelihood(X, y, kernel_fun, obs_var,
-                                      solve_fun=np.linalg.solve):
+def gp_regression_marginal_likelihood(
+    X, y, kernel_fun, obs_var, solve_fun=jnp.linalg.solve
+):
     # I am omitting the n term. Should I include it? It's constant.
 
-    obs_var_full = np.diag(obs_var * np.ones(X.shape[0]))
+    obs_var_full = jnp.diag(obs_var * jnp.ones(X.shape[0]))
     k_xx = kernel_fun(X, X)
 
-    k_chol = np.linalg.cholesky(k_xx + obs_var_full)
+    k_chol = jnp.linalg.cholesky(k_xx + obs_var_full)
 
-    det_term = -0.5 * np.linalg.slogdet(k_xx + obs_var_full)[1]
+    det_term = -0.5 * jnp.linalg.slogdet(k_xx + obs_var_full)[1]
     data_term = -0.5 * y @ solve_via_cholesky(k_chol, y)
 
     return det_term + data_term
 
 
-def map_smooth_data_1d(X, y, X_pred, kernel_fun=ard_rbf_kernel_efficient,
-                       standardise_y=True, prior_k=3, prior_theta=1/3,
-                       jitter=1e-5):
+def map_smooth_data_1d(
+    X,
+    y,
+    X_pred,
+    kernel_fun=ard_rbf_kernel,
+    standardise_y=True,
+    prior_k=3,
+    prior_theta=1 / 3,
+    jitter=1e-5,
+):
 
     y_mean = y.mean()
     y_std = y.std()
@@ -68,36 +76,37 @@ def map_smooth_data_1d(X, y, X_pred, kernel_fun=ard_rbf_kernel_efficient,
 
     def to_optimize(theta):
 
-        alpha, lscale, obs_var = theta**2
+        alpha, lscale, obs_var = theta ** 2
 
-        cur_k = partial(kernel_fun, lengthscales=np.array([lscale]),
-                        alpha=alpha, jitter=jitter)
+        cur_k = lambda x1, x2: kernel_fun(
+            x1, x2, jnp.array([lscale]), alpha, False, jitter
+        )
 
         marg_lik = gp_regression_marginal_likelihood(X, y, cur_k, obs_var)
 
-        prior_contrib = (prior_k - 1) * np.log(lscale) - lscale / prior_theta
+        prior_contrib = (prior_k - 1) * jnp.log(lscale) - lscale / prior_theta
 
         return -marg_lik - prior_contrib
 
-    to_opt_with_grad = value_and_grad(to_optimize)
+    to_opt_with_grad = jit(value_and_grad(to_optimize))
 
-    opt_result = minimize(to_opt_with_grad, [1., 1., 1.], jac=True,
-                          method='BFGS', tol=1e-3)
+    opt_result = minimize(
+        to_opt_with_grad, [1.0, 1.0, 1.0], jac=True, method="BFGS", tol=1e-3
+    )
 
-    assert opt_result.success
+    alpha, lscale, obs_var = opt_result.x ** 2
 
-    alpha, lscale, obs_var = opt_result.x**2
-
-    final_k = partial(kernel_fun, lengthscales=np.array([lscale]),
-                      alpha=alpha)
+    final_k = lambda x1, x2: kernel_fun(
+        x1, x2, jnp.array([lscale]), alpha, False, jitter
+    )
 
     # Predict
     pred_mean, pred_cov = fit_gp_regression(X, y, X_pred, final_k, obs_var)
-    pred_var = np.diag(pred_cov)
+    pred_var = jnp.diag(pred_cov)
 
     if standardise_y:
 
         pred_mean = (pred_mean * y_std) + y_mean
-        pred_var = pred_var * y_std**2
+        pred_var = pred_var * y_std ** 2
 
-    return pred_mean, pred_var
+    return pred_mean, pred_var, opt_result

@@ -1,6 +1,7 @@
 import autograd.numpy as np
 import scipy.sparse.linalg as spl
 from scipy.linalg import cho_solve, cho_factor, solve_triangular
+import jax.numpy as jnp
 
 
 def cholesky_inverse(matrix):
@@ -60,9 +61,33 @@ def solve_via_cholesky(k_chol, y):
     return b
 
 
-def generate_random_pos_def(n, jitter=10**-4):
+def generate_random_pos_def(n, jitter=10 ** -4):
 
     elements = np.random.randn(n, n)
     cov = elements @ elements.T + np.eye(n) * jitter
 
     return cov
+
+
+def triple_matmul_with_diagonal_mat(A, B_elts, C):
+    # B is diagonal.
+    return jnp.einsum("ik,k,kj->ij", A, B_elts, C)
+
+
+def log_determinant_diag_plus_low_rank_eigendecomp(A_elts, U, W_elts):
+    # Computes the log of the determinant
+    # |A + U W U^T|,
+    # where A is diagonal, W is diagonal, and W's dimension is smaller than A's dimension.
+
+    A_logdet = jnp.sum(jnp.log(A_elts))
+    W_logdet = jnp.sum(jnp.log(W_elts))
+
+    A_inv_elts = 1 / A_elts
+    W_inv_elts = 1 / W_elts
+
+    second_term_in_slogdet = triple_matmul_with_diagonal_mat(U.T, A_inv_elts, U)
+
+    sign, magnitude = jnp.linalg.slogdet(jnp.diag(W_inv_elts) + second_term_in_slogdet)
+    first_term = sign * magnitude
+
+    return first_term + W_logdet + A_logdet

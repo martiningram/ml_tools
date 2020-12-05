@@ -1,4 +1,5 @@
 import numpy as np
+from sklearn.preprocessing import PolynomialFeatures
 
 
 def remove_correlated_variables(covariate_df, corr_threshold=0.95):
@@ -26,3 +27,29 @@ def remove_correlated_variables_array(design_matrix, corr_threshold=0.95):
     to_keep = np.setdiff1d(np.arange(design_matrix.shape[1]), to_drop)
 
     return to_keep
+
+
+def add_quadratic_terms_and_interactions(X):
+
+    features = PolynomialFeatures(degree=2, include_bias=False)
+
+    return features.fit_transform(X)
+
+
+def add_quadratic_terms(X):
+
+    return np.concatenate([X, X ** 2], axis=1)
+
+
+def add_cubic_terms(X):
+
+    return np.concatenate([X, X ** 2, X ** 3], axis=1)
+
+
+def add_cubic_terms_and_simple_interactions(X):
+
+    cubic_additions = X ** 3
+
+    quadratic_terms = add_quadratic_terms_and_interactions(X)
+
+    return np.concatenate([quadratic_terms, cubic_additions], axis=1)
