@@ -180,9 +180,11 @@ def convert_decorator(fun, verbose=True):
     def result(x):
 
         if verbose:
-            fun = print_decorator(fun, verbose)
+            fun_to_use = print_decorator(fun, verbose)
+        else:
+            fun_to_use = fun
 
-        value, grad = fun(x)
+        value, grad = fun_to_use(x)
 
         return (
             onp.array(value).astype(onp.float64),
