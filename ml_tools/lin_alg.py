@@ -157,6 +157,7 @@ def lanczos(A_dot_x, b, m=30, return_eigenvalues=True):
 
     # FIXME: I'm pretty sure this implementation is suboptimal, in that it does
     # too much work. Fix.
+    # FIXME: Does this return Q or Q_T? The quspin library seems to call it Q_T?
 
     N = b.shape[0]
 
