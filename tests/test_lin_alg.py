@@ -3,7 +3,10 @@ import jax.numpy as jnp
 from ml_tools.lin_alg import (
     log_determinant_diag_plus_low_rank_eigendecomp,
     triple_matmul_with_diagonal_mat,
+    generate_random_pos_def,
 )
+import ml_tools.lin_alg as lin_alg
+from scipy.sparse.linalg import cg as scipy_cg
 
 
 def test_triple_matmul_with_diagonal_mat():
@@ -31,3 +34,18 @@ def test_log_determinant_diag_plus_low_rank_eigendecomp():
     other_res = log_determinant_diag_plus_low_rank_eigendecomp(A_elts, U, W_elts)
 
     assert np.allclose(full_logdet, other_res)
+
+
+def test_cg():
+
+    N = 100
+
+    A = generate_random_pos_def(N) + np.eye(100)
+    b = np.ones(N)
+
+    matvec_fun = lambda x: A @ x
+
+    custom_res, custom_info = lin_alg.cg(matvec_fun, b, tol=1e-12)
+    scipy_res, scipy_info = scipy_cg(A, b, tol=1e-8)
+
+    assert np.allclose(custom_res, scipy_res)

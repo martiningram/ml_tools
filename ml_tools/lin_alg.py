@@ -2,6 +2,7 @@ import numpy as np
 import scipy.sparse.linalg as spl
 from scipy.linalg import cho_solve, cho_factor, solve_triangular
 import jax.numpy as jnp
+from scipy.linalg import eigh_tridiagonal
 
 
 def cholesky_inverse(matrix):
@@ -94,6 +95,7 @@ def log_determinant_diag_plus_low_rank_eigendecomp(A_elts, U, W_elts):
 
 
 def cg(A_dot_x, b, log_fun=None, tol=1e-5, maxiter=200):
+    # DOES NOT AGREE WITH SCIPY -- DO NOT USE FOR ANYTHING SERIOUS!
     # Straightforward implementation of conjugate gradients following Trefethen
     # & Bau, p.294.
     # This takes a function A_dot_x computing the matrix-vector product of A
@@ -104,8 +106,11 @@ def cg(A_dot_x, b, log_fun=None, tol=1e-5, maxiter=200):
     # residual, and current search directions, respectively]. If provided, the
     # info dictionary will contain a list of the function results, recorded at
     # each iteration.
-    # Initial benchmarks suggested that this routine is suprisingly fast, but it
-    # may be missing some numerical tricks that are used e.g. in scipy.
+
+    print(
+        "Warning: This function does not give the same result as scipy.linalg.sparse.cg"
+        " and is thus likely not working as intended yet. Do not use for serious work!"
+    )
 
     # Initialise
     xnm1 = np.zeros_like(b)
@@ -146,3 +151,38 @@ def cg(A_dot_x, b, log_fun=None, tol=1e-5, maxiter=200):
             break
 
     return xn, {"n_iterations": n, "log_results": log_results, "success": n < maxiter}
+
+
+def lanczos(A_dot_x, b, m=30, return_eigenvalues=True):
+
+    # FIXME: I'm pretty sure this implementation is suboptimal, in that it does
+    # too much work. Fix.
+
+    N = b.shape[0]
+
+    alphas = np.zeros(m)
+    betas = np.zeros(m + 1)
+    qs = np.zeros((m + 2, N))
+    qs[1] = b / np.linalg.norm(b)
+
+    for i in range(m):
+
+        cur_n = i + 1
+        v = matvec_fun(qs[cur_n])
+        alphas[cur_n - 1] = qs[cur_n] @ v
+        v = v - betas[cur_n - 1] * qs[cur_n - 1] - alphas[cur_n - 1] * qs[cur_n]
+        betas[cur_n] = np.linalg.norm(v)
+        qs[cur_n + 1] = v / betas[cur_n]
+
+    res_qs = qs[1:]
+    res_betas = betas[1:-1]
+    res_alphas = alphas
+
+    results = {"Q": res_qs, "beta": res_betas, "alpha": res_alphas}
+
+    if return_eigenvalues:
+        results["evs"], results["evecs"] = eigh_tridiagonal(
+            results["alpha"], results["beta"]
+        )
+
+    return results
