@@ -168,13 +168,13 @@ def lanczos(A_dot_x, b, m=30, return_eigenvalues=True):
     for i in range(m):
 
         cur_n = i + 1
-        v = matvec_fun(qs[cur_n])
+        v = A_dot_x(qs[cur_n])
         alphas[cur_n - 1] = qs[cur_n] @ v
         v = v - betas[cur_n - 1] * qs[cur_n - 1] - alphas[cur_n - 1] * qs[cur_n]
         betas[cur_n] = np.linalg.norm(v)
         qs[cur_n + 1] = v / betas[cur_n]
 
-    res_qs = qs[1:]
+    res_qs = qs[1:-1]
     res_betas = betas[1:-1]
     res_alphas = alphas
 
