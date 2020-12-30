@@ -1,4 +1,4 @@
-import autograd.numpy as np
+import numpy as np
 import scipy.sparse.linalg as spl
 from scipy.linalg import cho_solve, cho_factor, solve_triangular
 import jax.numpy as jnp
@@ -91,3 +91,58 @@ def log_determinant_diag_plus_low_rank_eigendecomp(A_elts, U, W_elts):
     first_term = sign * magnitude
 
     return first_term + W_logdet + A_logdet
+
+
+def cg(A_dot_x, b, log_fun=None, tol=1e-5, maxiter=200):
+    # Straightforward implementation of conjugate gradients following Trefethen
+    # & Bau, p.294.
+    # This takes a function A_dot_x computing the matrix-vector product of A
+    # with x, and the vector b in Ax = b.
+    # The first element returned is the solution found. The second is a
+    # dictionary containing information about the iterations.
+    # log_fun is a function taking xnm1, rnm1, pnm1 [current solution, current
+    # residual, and current search directions, respectively]. If provided, the
+    # info dictionary will contain a list of the function results, recorded at
+    # each iteration.
+    # Initial benchmarks suggested that this routine is suprisingly fast, but it
+    # may be missing some numerical tricks that are used e.g. in scipy.
+
+    # Initialise
+    xnm1 = np.zeros_like(b)
+    rnm1 = b.copy()
+    pnm1 = rnm1.copy()
+
+    log_results = list()
+
+    for n in range(1, b.shape[0] + 1):
+
+        if log_fun is not None:
+            log_results.append(log_fun(xnm1, rnm1, pnm1))
+
+        cur_Apnm1 = A_dot_x(pnm1)
+
+        # Step length
+        alpha_n = (rnm1 @ rnm1) / (pnm1 @ cur_Apnm1)
+
+        # Approximate solution
+        xn = xnm1 + alpha_n * pnm1
+
+        # Residual
+        rn = rnm1 - alpha_n * cur_Apnm1
+
+        # Improvement this step
+        betan = (rn @ rn) / (rnm1 @ rnm1)
+
+        # Search direction
+        pn = rn + betan * pnm1
+
+        # TODO: This is probably not efficient -- unless it makes
+        # passes by reference?
+        xnm1 = xn
+        rnm1 = rn
+        pnm1 = pn
+
+        if np.linalg.norm(rn) < tol or n >= maxiter:
+            break
+
+    return xn, {"n_iterations": n, "log_results": log_results, "success": n < maxiter}
