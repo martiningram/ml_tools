@@ -179,7 +179,7 @@ def lanczos(A_dot_x, b, m=30, return_eigenvalues=True):
     res_betas = betas[1:-1]
     res_alphas = alphas
 
-    results = {"Q": res_qs, "beta": res_betas, "alpha": res_alphas}
+    results = {"Q": res_qs.T, "beta": res_betas, "alpha": res_alphas}
 
     if return_eigenvalues:
         results["evs"], results["evecs"] = eigh_tridiagonal(
@@ -187,3 +187,16 @@ def lanczos(A_dot_x, b, m=30, return_eigenvalues=True):
         )
 
     return results
+
+
+def solve_inv_sqrt_approx_lanczos(E, V, Q, z):
+
+    m = E.shape[0]
+
+    e1 = (np.arange(m) == 0).astype(float)
+
+    sqrt_term = np.linalg.solve(V.T, (1 / np.sqrt(E)) * np.linalg.solve(V, e1))
+    z_norm = np.linalg.norm(z)
+    result = z_norm * np.matmul(Q, sqrt_term)
+
+    return result

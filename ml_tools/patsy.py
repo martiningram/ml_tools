@@ -20,7 +20,11 @@ def create_interaction_formula(cov_names):
 
 
 def create_formula(
-    cov_names, main_effects=True, quadratic_effects=True, interactions=False
+    cov_names,
+    main_effects=True,
+    quadratic_effects=True,
+    interactions=False,
+    intercept=True,
 ):
 
     model_str = ""
@@ -35,5 +39,8 @@ def create_formula(
     if interactions:
         addition = "+" if len(model_str) > 0 else ""
         model_str = model_str + addition + create_interaction_formula(cov_names)
+
+    if not intercept:
+        model_str = model_str + "- 1"
 
     return model_str
