@@ -70,9 +70,6 @@ def sample_numpyro_nuts(
     seed = jax.random.PRNGKey(random_seed)
     samples = _sample(flat_init_params, seed)
 
-    # Presumably, the output shape should be:
-    # n_chains, n_samples, n_params?
-    # Yes.
     # Reshape this into a dict
     def reshape_single_chain(theta):
         fun_to_map = lambda x: apply_constraints(
@@ -104,8 +101,8 @@ def sample_nuts(
     log_post_fun = jit(
         partial(
             _calculate_log_posterior,
-            log_lik_fun=lik_fun,
-            log_prior_fun=calculate_prior,
+            log_lik_fun=log_lik_fun,
+            log_prior_fun=log_prior_fun,
             constrain_fun_dict=constrain_fun_dict,
             summary=summary,
         )
@@ -115,7 +112,7 @@ def sample_nuts(
         log_post_fun,
         flat_theta,
         summary,
-        theta_constraints,
+        constrain_fun_dict,
         chains=chains,
         draws=draws,
         tune=tune,
