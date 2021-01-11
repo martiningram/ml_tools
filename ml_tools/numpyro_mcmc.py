@@ -38,6 +38,7 @@ def sample_numpyro_nuts(
     progress_bar=True,
     random_seed=10,
     chain_method="parallel",
+    thinning=1,
 ):
     # Strongly inspired by:
     # https://github.com/pymc-devs/pymc3/blob/master/pymc3/sampling_jax.py#L116
@@ -61,6 +62,7 @@ def sample_numpyro_nuts(
             postprocess_fn=None,
             progress_bar=progress_bar,
             chain_method=chain_method,
+            thinning=thinning,
         )
 
         numpyro.run(seed, init_params=current_state)
@@ -94,6 +96,7 @@ def sample_nuts(
     progress_bar=True,
     random_seed=10,
     chain_method="vectorized",
+    thinning=1,
 ):
 
     flat_theta, summary = initialise_from_shapes(parameter_shape_dict, n_chains=chains)
@@ -117,6 +120,7 @@ def sample_nuts(
         draws=draws,
         tune=tune,
         chain_method=chain_method,
+        thinning=thinning,
     )
 
     return sampling_result
