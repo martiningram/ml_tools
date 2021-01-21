@@ -251,3 +251,8 @@ def num_mat_elts_from_num_tri(num_triangular_elts):
     sqrt_term = np.sqrt(8 * num_triangular_elts + 1)
 
     return ((sqrt_term - 1) / 2).astype(int)
+
+
+def half_normal_logpdf(y, sd):
+
+    return 0.5 * np.log(2) - np.log(sd) - 0.5 * np.log(np.pi) - y ** 2 / (2 * sd ** 2)
