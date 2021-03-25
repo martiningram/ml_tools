@@ -5,7 +5,7 @@ from scipy.optimize import minimize
 from jax.ops import index_update
 from jax.scipy.special import expit
 import numpy as onp
-from jax import jit
+from jax import jit, grad, jvp
 from functools import partial
 from jax.scipy.special import gammaln, xlog1py, xlogy
 
@@ -256,3 +256,10 @@ def num_mat_elts_from_num_tri(num_triangular_elts):
 def half_normal_logpdf(y, sd):
 
     return 0.5 * np.log(2) - np.log(sd) - 0.5 * np.log(np.pi) - y ** 2 / (2 * sd ** 2)
+
+
+@partial(jit, static_argnums=0)
+def hvp(f, primals, tangents):
+    # Taken (and slightly modified) from:
+    # https://jax.readthedocs.io/en/latest/notebooks/autodiff_cookbook.html
+    return jvp(grad(f), (primals,), (tangents,))[1]

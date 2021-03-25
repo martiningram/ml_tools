@@ -25,12 +25,15 @@ def solve_via_cholesky(k_chol, y):
     return b
 
 
-def fit_gp_regression(X, y, X_predict, kernel_fun, obs_var):
+def fit_gp_regression(X, y, X_predict, kernel_fun, obs_var, pred_kernel_fun=None):
 
-    k_xstar_x = kernel_fun(X_predict, X)
+    if pred_kernel_fun is None:
+        pred_kernel_fun = kernel_fun
+
+    k_xstar_x = pred_kernel_fun(X_predict, X)
     k_xx = kernel_fun(X, X)
     obs_mat = jnp.diag(obs_var * jnp.ones(X.shape[0]))
-    k_xstar_xstar = kernel_fun(X_predict, X_predict)
+    k_xstar_xstar = pred_kernel_fun(X_predict, X_predict)
 
     k_chol = jnp.linalg.cholesky(k_xx + obs_mat)
 

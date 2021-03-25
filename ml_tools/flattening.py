@@ -1,15 +1,12 @@
 import numpy as np
 import tensorflow as tf
 from functools import partial
-from collections import namedtuple, OrderedDict
-
-
-array_info = namedtuple("array_info", "shape")
+from collections import OrderedDict
 
 
 def extract_info(array):
 
-    return array_info(shape=array.shape)
+    return array.shape
 
 
 def flatten_and_summarise(**input_arrays):
@@ -45,9 +42,9 @@ def reconstruct(flat_array, summaries, reshape_fun):
     cur_name, cur_summary = list(summaries.items())[0]
 
     # Cast to int is there to have this definitely work with TF
-    cur_elements = int(np.prod(cur_summary.shape))
+    cur_elements = int(np.prod(cur_summary))
 
-    cur_result = {cur_name: reshape_fun(flat_array[:cur_elements], cur_summary.shape)}
+    cur_result = {cur_name: reshape_fun(flat_array[:cur_elements], cur_summary)}
 
     remaining_summaries = OrderedDict(
         {x: y for x, y in summaries.items() if x != cur_name}

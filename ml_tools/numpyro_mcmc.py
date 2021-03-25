@@ -2,12 +2,12 @@ from numpyro.infer import MCMC, NUTS
 from jax import jit
 import jax.numpy as jnp
 import jax
-from ml_tools.flattening import flatten_and_summarise, reconstruct
 import numpy as np
 from jax import vmap, jit
 import arviz as az
 
 # TODO: Would be better not to have a dependency on jax_advi here!
+from jax_advi.utils.flattening import flatten_and_summarise, reconstruct
 from jax_advi.constraints import apply_constraints
 from jax_advi.advi import _calculate_log_posterior
 from functools import partial

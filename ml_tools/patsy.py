@@ -44,3 +44,16 @@ def create_formula(
         model_str = model_str + "- 1"
 
     return model_str
+
+
+def remove_intercept_column(array, design_info):
+    # This function is to sidestep the issue in patsy where it is essentially
+    # impossible to remove the intercept term:
+    # https://github.com/pydata/patsy/issues/80
+    # The workaround is to build the design matrix with the intercept column and
+    # then remove it with this function.
+    column_name_lookup = {x: i for i, x in enumerate(design_info.column_names)}
+    intercept_column = column_name_lookup["Intercept"]
+    remaining_indices = [i for i in range(array.shape[1]) if i != intercept_column]
+
+    return array[:, remaining_indices]

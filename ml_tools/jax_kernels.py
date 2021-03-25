@@ -46,7 +46,6 @@ def compute_diag_weighted_square_distance(x1, x2, lengthscales):
     return jnp.maximum(norms + cross_terms, 0.0)
 
 
-@partial(jit, static_argnums=4)
 def ard_rbf_kernel(x1, x2, lengthscales, alpha, diag_only=False, jitter=DEFAULT_JITTER):
 
     if diag_only:
@@ -64,7 +63,6 @@ def ard_rbf_kernel(x1, x2, lengthscales, alpha, diag_only=False, jitter=DEFAULT_
     return kernel
 
 
-@partial(jit, static_argnums=4)
 def matern_kernel_32(
     x1, x2, lengthscales, alpha, diag_only=False, jitter=DEFAULT_JITTER
 ):
@@ -85,7 +83,6 @@ def matern_kernel_32(
     return kernel
 
 
-@partial(jit, static_argnums=2)
 def add_jitter(kern, jitter=DEFAULT_JITTER, diag_only=False):
 
     if diag_only:
@@ -101,7 +98,6 @@ def add_jitter(kern, jitter=DEFAULT_JITTER, diag_only=False):
     return kern
 
 
-@partial(jit, static_argnums=3)
 def bias_kernel(x1, x2, sd, diag_only=False, jitter=DEFAULT_JITTER):
 
     output_rows = x1.shape[0]
@@ -137,7 +133,9 @@ def additive_kernel(
     to_vmap = lambda x1, x2, lengthscale, alpha: base_kernel_fun(
         x1.reshape(-1, 1),
         x2.reshape(-1, 1),
-        lengthscale.reshape(-1,),
+        lengthscale.reshape(
+            -1,
+        ),
         alpha,
         diag_only,
         jitter,
@@ -150,3 +148,21 @@ def additive_kernel(
     kernel_res = jnp.tensordot(additive_alphas, girard_res, axes=(0, 0))
 
     return kernel_res
+
+
+def linear_kernel_ard(x1, x2, prior_variances, jitter=DEFAULT_JITTER, diag_only=False):
+
+    if diag_only:
+
+        min_size = min(x1.shape[0], x2.shape[0])
+        x1, x2 = x1[:min_size], x2[:min_size]
+        diag_result = jnp.einsum("ik,k,ik->i", x1, prior_variances, x2)
+
+        return diag_result + jitter
+
+    else:
+
+        result = jnp.einsum("ik,k,jk->ij", x1, prior_variances, x2)
+        result = add_jitter(result, jitter)
+
+        return result
