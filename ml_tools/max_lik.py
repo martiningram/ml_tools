@@ -6,7 +6,6 @@ from scipy.optimize import minimize
 from jax import jit, value_and_grad
 from .jax import convert_decorator, hvp, print_decorator
 from functools import partial
-from jax_advi.diagnostics import compute_ev
 from scipy.sparse.linalg import eigsh
 from scipy.sparse.linalg import LinearOperator
 
