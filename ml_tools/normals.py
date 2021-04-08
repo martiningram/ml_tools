@@ -4,6 +4,7 @@ from scipy.stats import norm
 import matplotlib.pyplot as plt
 from scipy.linalg import inv, cho_factor, cho_solve
 from scipy.special import expit, logsumexp
+import jax.numpy as jnp
 
 
 class MultivariateNormal(object):
@@ -474,3 +475,20 @@ def normal_approx_to_binomial(successes, trials):
     vars = means * (1 - means) / trials
 
     return means, vars
+
+
+def kalman_update(m_km, P_km, H_k, R_k, y_k):
+
+    v_k = y_k - H_k @ m_km
+    S_k = H_k @ P_km @ H_k.T + R_k
+    K_k = P_km @ jnp.linalg.solve(S_k, H_k).T
+    m_k = m_km + K_k @ v_k
+    P_k = P_km - K_k @ S_k @ K_k.T
+
+    # Compute "energy"
+    log_det_term = 0.5 * jnp.prod(jnp.array(jnp.linalg.slogdet(2 * np.pi * S_k)))
+    quad_term = 0.5 * v_k.T @ jnp.linalg.solve(S_k, v_k)
+
+    energy = log_det_term + quad_term
+
+    return m_k, P_k, energy
