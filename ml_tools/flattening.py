@@ -1,5 +1,4 @@
 import numpy as np
-import tensorflow as tf
 from functools import partial
 from collections import OrderedDict
 
@@ -21,6 +20,8 @@ def flatten_and_summarise(**input_arrays):
 
 
 def flatten_and_summarise_tf(**input_arrays):
+    import tensorflow as tf
+
     # Better way than this duplication?
 
     input_arrays = OrderedDict(input_arrays)
@@ -59,5 +60,10 @@ def reconstruct(flat_array, summaries, reshape_fun):
 
 
 # Convenience functions
-reconstruct_tf = partial(reconstruct, reshape_fun=tf.reshape)
+def reconstruct_tf(flat_array, summaries):
+    import tensorflow as tf
+
+    return partial(reconstruct, reshape_fun=tf.reshape)(flat_array, summaries)
+
+
 reconstruct_np = partial(reconstruct, reshape_fun=np.reshape)
