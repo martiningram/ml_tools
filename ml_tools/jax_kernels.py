@@ -83,6 +83,24 @@ def matern_kernel_32(
     return kernel
 
 
+def matern_kernel_12(x1, x2, alpha, lengthscales, diag_only=False, jitter=1e-5):
+
+    if diag_only:
+
+        r_sq = compute_diag_weighted_square_distance(x1, x2, lengthscales)
+
+    else:
+
+        r_sq = compute_weighted_square_distances(x1, x2, lengthscales)
+
+    r = jnp.sqrt(r_sq + EPS)
+
+    kernel = alpha ** 2 * jnp.exp(-r)
+    kernel = add_jitter(kernel, jitter)
+
+    return kernel
+
+
 def add_jitter(kern, jitter=DEFAULT_JITTER, diag_only=False):
 
     if diag_only:
@@ -115,7 +133,6 @@ def bias_kernel(x1, x2, sd, diag_only=False, jitter=DEFAULT_JITTER):
     return kern
 
 
-@partial(jit, static_argnums=(5, 6))
 def additive_kernel(
     x1,
     x2,
