@@ -200,3 +200,8 @@ def solve_inv_sqrt_approx_lanczos(E, V, Q, z):
     result = z_norm * np.matmul(Q, sqrt_term)
 
     return result
+
+
+def get_rot_mat(theta):
+
+    return np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]])

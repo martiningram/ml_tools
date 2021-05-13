@@ -124,7 +124,7 @@ def bias_kernel(x1, x2, sd, diag_only=False, jitter=DEFAULT_JITTER):
     # shape = jnp.stack([output_rows, output_cols])
 
     if diag_only:
-        kern = jnp.repeat(sd ** 2, (min(output_cols, output_rows),)) + jitter
+        kern = jnp.repeat(sd ** 2, min(output_cols, output_rows)) + jitter
     else:
         # kern = jnp.tile(sd ** 2, shape)
         kern = jnp.ones((output_rows, output_cols)) * sd ** 2

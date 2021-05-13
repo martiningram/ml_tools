@@ -51,6 +51,7 @@ def conditional_plot_2d(
     other_feat_vals=0.0,
     lower_lim=-2,
     upper_lim=2,
+    scaler=None,
 ):
 
     # Returns arrays for plotting contour plots / surface plots.
@@ -66,6 +67,12 @@ def conditional_plot_2d(
     base_vals[:, dims_to_vary] = to_predict
     predicted = pred_fun(base_vals)
     reshaped = np.reshape(predicted, (n_points, n_points))
+
+    if scaler is not None:
+        transformed_vals = scaler.inverse_transform(base_vals)
+        relevant = transformed_vals[:, dims_to_vary]
+        grid[0] = relevant[:, 0].reshape(n_points, n_points)
+        grid[1] = relevant[:, 1].reshape(n_points, n_points)
 
     return grid[0], grid[1], reshaped
 
