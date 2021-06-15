@@ -19,3 +19,10 @@ def interleave_arrays(arr_1, arr_2):
     result[1::2] = arr_2
 
     return result
+
+
+def load_to_dict(npz_file, *args, **kwargs):
+
+    with open(npz_file, "rb") as f:
+        loaded = np.load(f, *args, **kwargs)
+        return dict(loaded)
