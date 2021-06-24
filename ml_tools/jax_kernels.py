@@ -183,3 +183,18 @@ def linear_kernel_ard(x1, x2, prior_variances, jitter=DEFAULT_JITTER, diag_only=
         result = add_jitter(result, jitter)
 
         return result
+
+
+def raneff_kernel(z1, z2, raneff_var, diag_only=False, jitter=DEFAULT_JITTER):
+
+    if diag_only:
+        # Often (though we won't use it here), it can be useful to compute only the diagonal entries.
+        smaller = jnp.minimum(z1.shape[0], z2.shape[0])
+        kern = jnp.einsum("ik,ik->i", z1[:smaller], z2[:smaller])
+
+    else:
+        # This is what we really need.
+        kern = raneff_var * z1 @ z2.T
+
+    # Typically we add a little bit of noise to the diagonal for numerical stability.
+    return add_jitter(kern, jitter=DEFAULT_JITTER, diag_only=diag_only)
