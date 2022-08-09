@@ -2,7 +2,8 @@ import jax.numpy as np
 from jax import lax, hessian, jacobian
 from typing import Callable, Tuple
 from scipy.optimize import minimize
-from jax.ops import index_update
+
+# from jax.ops import index_update
 from jax.scipy.special import expit
 import numpy as onp
 from jax import jit, grad, jvp
@@ -101,14 +102,14 @@ def fit_laplace_approximation(
 # TODO: Is there some way to avoid the static argnum?
 
 
-@partial(jit, static_argnums=1)
-def lo_tri_from_elements(elements, n):
-
-    L = np.zeros((n, n))
-    indices = np.tril_indices(n)
-    L = index_update(L, indices, elements)
-
-    return L
+# @partial(jit, static_argnums=1)
+# def lo_tri_from_elements(elements, n):
+#
+#     L = np.zeros((n, n))
+#     indices = np.tril_indices(n)
+#     L = index_update(L, indices, elements)
+#
+#     return L
 
 
 def weighted_sum(mean, cov, weights):
@@ -255,7 +256,7 @@ def num_mat_elts_from_num_tri(num_triangular_elts):
 
 def half_normal_logpdf(y, sd):
 
-    return 0.5 * np.log(2) - np.log(sd) - 0.5 * np.log(np.pi) - y ** 2 / (2 * sd ** 2)
+    return 0.5 * np.log(2) - np.log(sd) - 0.5 * np.log(np.pi) - y**2 / (2 * sd**2)
 
 
 @partial(jit, static_argnums=0)
